@@ -4,16 +4,16 @@ AUTHORS: "Yixin Zhao; Xin Zeng"
 DATE: 2025-11-03
 ---
 
-# This repository contains codes and documentations for analyzing transcriptional pausing using the UniMod framework.
+# Overview
 
-## Scripts used to generate figures for the LRT paper
+The following sections describe the scripts used to generate figures for this study.
 
-### Computational simulations
+## Computational simulations
 1. Script `lrt_matched_coverage.R`: 
    Figure S1C&D
    Figure S1E
 
-### Experimental data validation
+## Experimental data validation
 
 Samples used in this section is recorded in "unimod_human/metadata/metadata_aoi.csv"
 
@@ -22,7 +22,7 @@ Samples used in this section is recorded in "unimod_human/metadata/metadata_aoi.
    Figure 1 E&F (Auxin induced NELF depletion);
    Figure S2 (P-TEFb inhibition by flavopiridol)
 
-### Visualization
+## Visualization
 1. Script `visualize_two_samples.R`:
    Figure 1G/H/I
 
