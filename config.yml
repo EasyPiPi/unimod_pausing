@@ -1,0 +1,20 @@
+# files and directories
+K562_PROSEQ_SE:
+    "/local1/home/yizhao/download/geo/proseq/raw"
+K562_PROSEQ_PE:
+    "/local1/home/yizhao/download/Charles/K562/elongation_rate/raw_0h"
+K562_CHROSEQ_PE:
+    "/local1/home/yizhao/download/Charles/K562/olaparib"
+CHROMINFO:
+    "/local/projects/comparaReg/external_resources/human/chrominfo.txt"
+BWA_INDEX:
+    "/local/projects/comparaReg/external_resources/human/bwa/index/genome.fasta"
+HUMAN_GTF:
+    "/local/projects/comparaReg/external_resources/human/transcript.gtf"
+NON_OLP_GENE:
+    "/local/projects/comparaReg/external_resources/human/non_overlapping_coding_genes.csv"
+ROOT_DIR:
+    "/home/yizhao/projects/Snakemake_projects/unimod_human"
+# parameters
+tss_length: 250 # parameter k
+tts_length: 250 # parameter m

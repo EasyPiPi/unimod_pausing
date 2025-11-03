@@ -1,0 +1,6 @@
+file_name,accession_number,assay,rna_type,cell_line,replicate,read_type,reference,paired_end,paired_with,group,treatment,duration_min,origin_file
+SRR11024616,GSM4296324,PROseq,RNA,DLD1,1,SE,aoi,1,,NELFC_Auxin_Ctrl,DMSO,0,SRR11024616
+SRR11024617,GSM4296325,PROseq,RNA,DLD1,1,SE,aoi,1,,NELFC_Auxin,Auxin,120,SRR11024617
+SRR11024618,GSM4296326,PROseq,RNA,DLD1,1,SE,aoi,1,,NELFC_Fp,Flavopiridol,60,SRR11024618
+SRR11024620,GSM4296328,PROseq,RNA,DLD1,1,SE,aoi,1,,NELFC_NVP2_Ctrl,DMSO,0,SRR11024620
+SRR11024621,GSM4296329,PROseq,RNA,DLD1,1,SE,aoi,1,,NELFC_NVP2,NVP-2,60,SRR11024621

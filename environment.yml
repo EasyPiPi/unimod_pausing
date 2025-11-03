@@ -1,0 +1,111 @@
+# The name of the environment
+name: unimod
+# The relevent channels
+channels:
+- conda-forge
+- bioconda
+dependencies:
+# #### Atom ####
+# - ipykernel
+# - r-irkernel
+#### Python ####
+- biopython
+- h5py # work with h5 format file
+- jupyterlab
+- numpy
+- nodejs # jupyterlab extension support
+- pandas
+- python
+- scikit-learn
+- snakemake-minimal
+- spyder
+#### R ####
+- bioconductor-annotationhub
+- bioconductor-biocparallel
+- bioconductor-brgenomics
+- bioconductor-bsgenome.hsapiens.ncbi.grch38
+- bioconductor-clusterprofiler # GSEA
+- bioconductor-complexheatmap
+- bioconductor-do.db >=2.9 # Disease Ontology annotations
+- bioconductor-encodexplorer
+- bioconductor-genomation
+- bioconductor-genomationdata
+- bioconductor-genomicranges
+- bioconductor-geometadb
+- bioconductor-geoquery
+- bioconductor-gviz
+- bioconductor-meshes # GSEA
+# - bioconductor-mesh.hsa.eg.db # Meshes GSEA
+- bioconductor-org.hs.eg.db
+- bioconductor-org.mm.eg.db
+- bioconductor-pathview # pathway based data integration and visualization
+- bioconductor-plyranges
+- bioconductor-reactomepa # GSEA
+# - bioconductor-preprocesscore # for quantile normalization
+- bioconductor-repitools
+- bioconductor-rtracklayer
+- r-animation
+- r-base>=4.0
+- r-batchtools
+- r-broom>=0.7.9
+- r-cli>=3.0.1
+- r-corrplot
+- r-corrr
+- r-cowplot
+- r-europepmc # GSEA plot
+- r-fitdistrplus
+- r-data.table
+- r-devtools
+- r-ggally
+- r-gganimate
+- r-ggbeeswarm # swarmplot
+- r-ggh4x # ggplot2 extension package
+- r-ggnewscale # GSEA plot
+- r-ggpointdensity
+- r-ggpubr
+- r-ggridges # GSEA plot
+- r-ggstance # GSEA plot
+- r-ggseqlogo
+- r-ggthemes
+- r-ggupset # GSEA plot
+# - r-gprofiler2 # for GO analysis
+# - r-markovchain # Markov simulation
+- r-maps
+- r-mclust
+- r-microbenchmark
+- r-msigdbr # GSEA
+- r-numderiv # numerical derivatives
+- r-optparse
+- r-optimx
+- r-profvis # profile R code
+# - r-reshape2
+- r-skimr
+- r-testthat
+- r-tidymodels>=0.1.4
+- r-tidyverse
+- r-truncnorm # truncated normal
+# - r-tseries
+- r-vcd
+- r-venndiagram
+- r-vroom # read and write data (like 'csv', 'tsv' and 'fwf') quickly
+- r-zoo
+#### only for testing ####
+# - bioconductor-rnaseqdata.hnrnpc.bam.chr14
+# - bioconductor-txdb.hsapiens.ucsc.hg19.knowngene
+#### Others ####
+# PRO-seq 2.0 tools
+- fastx_toolkit
+- seqtk
+- prinseq
+- bwa
+- bedtools
+- bedops
+- ucsc-bedgraphtobigwig
+- ucsc-bigwigmerge
+- cutadapt=4.0
+- samtools=1.10
+# others
+- crossmap
+- multiqc
+# parallelization
+- parafly

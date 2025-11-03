@@ -1,0 +1,36 @@
+# R files
+.Rproj.user
+.Rhistory
+*.R[Dd]ata
+*.RDS
+*.Rproj
+Rprof.out
+
+# result files
+*.bw
+*.pdf
+*.tsv
+
+# directories
+data/
+results/
+logs/
+ext_data/*
+!ext_data/rate/
+ext_data/rate/vihervaara_2017/*
+ext_data/rate/vihervaara_2021/*
+!ext_data/rate/vihervaara_2017/41467_2017_151_MOESM2_ESM.txt
+!ext_data/rate/vihervaara_2021/molcel_7891_mmc2.txt
+indicator/
+.snakemake/
+
+outputs/*
+!outputs/between_samples
+outputs/between_samples/*
+!outputs/between_samples/table/
+
+nohup.out
+
+*.gif
+
+Rplot.png
