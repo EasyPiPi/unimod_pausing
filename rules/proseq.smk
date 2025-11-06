@@ -40,9 +40,22 @@ def get_fastq_se(wildcards):
         r1 = os.path.join(config["GEO_PROSEQ_DIR"], subdf.file_name.values[0] + ".fastq.gz")
     return r1
 
+rule make_symlink_se:
+    input:
+        r1 = get_fastq_se
+    output:
+        r1 = temp(os.path.join("tmp/raw_data/p3", sample_wildcard + ".fastq.gz"))
+    wildcard_constraints:
+        # need to be changed when more datasets are included
+        reference = "aoi|hoyt"
+    shell:
+        """
+        ln -s {input.r1} {output.r1}
+        """
+
 rule process_proseq_se:
     input:
-        r1 = get_fastq_se,
+        r1 = rules.make_symlink_se.output.r1,
         chrominfo = config["HUMAN_CHROMINFO"],
         index = config["HUMAN_BWA_INDEX"]
     output:
@@ -65,7 +78,7 @@ rule process_proseq_se:
 
 rule process_proseq_se_dme:
     input:
-        r1 = get_fastq_se,
+        r1 = rules.make_symlink_se.output.r1,
         complete = rules.build_bwa_index.output.complete,
         chrominfo = rules.compute_chrominfo.output.chrominfo,
         index = 'ext_data/genome/dm6/bwa/index/genome.fasta'
