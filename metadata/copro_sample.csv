@@ -1,16 +1,4 @@
 file_name,gse,assay,type,prime,strand
-GSE116472_CoPRO_AllMerge_Cap_3p_mn,GSE116472,CoPRO,Cap,3p,minus
-GSE116472_CoPRO_AllMerge_Cap_3p_pl,GSE116472,CoPRO,Cap,3p,plus
-GSE116472_CoPRO_AllMerge_Cap_5p_mn,GSE116472,CoPRO,Cap,5p,minus
-GSE116472_CoPRO_AllMerge_Cap_5p_pl,GSE116472,CoPRO,Cap,5p,plus
-GSE116472_CoPRO_AllMerge_CappedAndUncapped_3p_mn,GSE116472,CoPRO,CappedAndUncapped,3p,minus
-GSE116472_CoPRO_AllMerge_CappedAndUncapped_3p_pl,GSE116472,CoPRO,CappedAndUncapped,3p,plus
-GSE116472_CoPRO_AllMerge_CappedAndUncapped_5p_mn,GSE116472,CoPRO,CappedAndUncapped,5p,minus
-GSE116472_CoPRO_AllMerge_CappedAndUncapped_5p_pl,GSE116472,CoPRO,CappedAndUncapped,5p,plus
-GSE116472_CoPRO_AllMerge_Uncapped_3p_mn,GSE116472,CoPRO,Uncapped,3p,minus
-GSE116472_CoPRO_AllMerge_Uncapped_3p_pl,GSE116472,CoPRO,Uncapped,3p,plus
-GSE116472_CoPRO_AllMerge_Uncapped_5p_mn,GSE116472,CoPRO,Uncapped,5p,minus
-GSE116472_CoPRO_AllMerge_Uncapped_5p_pl,GSE116472,CoPRO,Uncapped,5p,plus
 GSM4296337_PRO-cap-01-NELFC-AID-untreated-rep1.minus,GSE144786,PROcap,untreated,5p,minus
 GSM4296337_PRO-cap-01-NELFC-AID-untreated-rep1.plus,GSE144786,PROcap,untreated,5p,plus
 GSM4296338_PRO-cap-02-NELFC-AID-treated-rep1.minus,GSE144786,PROcap,treated,5p,minus
