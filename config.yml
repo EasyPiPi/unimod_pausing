@@ -1,9 +1,9 @@
-# Directories
+#### Directories ####
 ROOT_DIR:
     "/home/yixin/Desktop/github/unimod_pausing"
 GEO_PROSEQ_DIR:
     "/data/geo/PROseq"
-# Files
+#### Files ####
 HUMAN_CHROMINFO:
     "/home/yixin/evolgen/comparaReg/external_resources/human/chrominfo.txt"
 HUMAN_BWA_INDEX:
@@ -13,8 +13,10 @@ HUMAN_GTF:
 HUMAN_NONOLP_GENE:
     "/home/yixin/evolgen/comparaReg/external_resources/human/non_overlapping_coding_genes.csv"
 
-# Parameters
+#### Parameters ####
 tss_length: 250 # parameter k
 tts_length: 250 # parameter m
 rc_cutoff: 10 # cutoff for PRO-cap 5' end read count to be considered as active
-        
+gb_min_length: 6e3 # filter out genes shorter than this length
+gb_max_length: 9e4 # when gene is longer than this length, only use length up to this cutoff for read counting
+dist_to_tss: 1e3 # distance to TSS and TTS for gene body read counting        

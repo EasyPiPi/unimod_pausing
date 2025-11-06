@@ -5,9 +5,9 @@ rule generate_counting_region:
     params:
         tss_length = config["tss_length"], # parameter k
         tts_length = config["tts_length"], # parameter m
-        gb_min_length = 6e3, # filter out genes shorter than this length
-        gb_max_length = 9e4, # when gene is longer than this length, only use length up to this cutoff for read counting
-        dist_to_tss = 1e3 # distance to TSS and TTS for gene body read counting
+        gb_min_length = config["gb_min_length"], 
+        gb_max_length = config["gb_max_length"], 
+        dist_to_tss = config["gb_max_length"]
     threads:1
     log:
         os.path.join("logs/generate_counting_region", "{cell_line}.log")

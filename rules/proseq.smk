@@ -228,7 +228,7 @@ rule crossmap_copro:
     shell:
         "CrossMap.py bigwig {input.chain} {input.bw} {params.bw}"
 
-# find active TSSs based on coPRO-cap data and plot read counts
+# find active TSSs based on PRO-cap data and plot read counts
 rule get_human_transcripts:
     input:
         non_olp_gn = config["HUMAN_NONOLP_GENE"],
