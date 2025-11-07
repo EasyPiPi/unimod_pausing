@@ -35,25 +35,6 @@ rule analyze_one_sample_pause_release:
     script:
         "../scripts/unimod/analyze_one_sample_poisson_pause_release.R"
 
-rule analyze_one_sample_pause_release_replicate:
-    input:
-        grng = rules.generate_counting_region.output.grng,
-        bwp1_p3 = lambda wc: get_bigwig_files(wc, strand = "plus"),
-        bwm1_p3 = lambda wc: get_bigwig_files(wc, strand = "minus")
-    params:
-        helper = "scripts/unimod/helper_function.R",
-        em = "scripts/unimod/helper_function_em_pause_release.R",
-        result_dir = os.path.join("outputs/within_replicate", sample_wildcard, "pause_release")
-    threads:1
-    log:
-        os.path.join("logs/analyze_one_sample", sample_wildcard + "_pause_release.log")
-    output:
-        rate_calibrated = os.path.join("outputs/within_replicate", sample_wildcard, "pause_release", "rate_calibrated.csv"),
-        rate_tbl = os.path.join("outputs/within_replicate", sample_wildcard, "pause_release", "rate.RDS")
-    script:
-        "../scripts/unimod/analyze_one_sample_poisson_pause_release.R"
-
-
 rule analyze_one_sample_steric_hindrance:
     input:
         grng = rules.generate_counting_region.output.grng,
@@ -130,17 +111,17 @@ rule visualize_two_samples:
     script:
         "../scripts/unimod/visualize_two_samples.R"
 
-rule do_gsea:
-    input:
-        omega = rules.analyze_two_samples.output.omega,
-        beta = rules.analyze_two_samples.output.beta
-    params:
-        prop = 0.1, # proportion of genes to be considered in a GSEA enrichment analysis,
-        result_dir = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}", "go")
-    threads:2
-    log:
-        os.path.join("logs/do_gsea", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}" + ".log")
-    output:
-        touch(os.path.join("indicator/do_gsea", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}" + ".complete"))
-    script:
-        "../scripts/go/do_gsea_within_study.R"
+# rule do_gsea:
+#     input:
+#         omega = rules.analyze_two_samples.output.omega,
+#         beta = rules.analyze_two_samples.output.beta
+#     params:
+#         prop = 0.1, # proportion of genes to be considered in a GSEA enrichment analysis,
+#         result_dir = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}", "go")
+#     threads:2
+#     log:
+#         os.path.join("logs/do_gsea", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}" + ".log")
+#     output:
+#         touch(os.path.join("indicator/do_gsea", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}" + ".complete"))
+#     script:
+#         "../scripts/go/do_gsea_within_study.R"

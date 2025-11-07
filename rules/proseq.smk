@@ -224,7 +224,7 @@ rule merge_bigwig:
 rule proseq_done:
     input:
         "indicator/bwa/index/dm6.complete",
-        expand(os.path.join("indicator/proseq/dme/p3", expand_sample_wildcard + ".complete"), df = metadata_aoi.itertuples()),
+        # expand(os.path.join("indicator/proseq/dme/p3", expand_sample_wildcard + ".complete"), df = metadata_aoi.itertuples()),
         expand(os.path.join("outputs/bigwig/{prime}", expand_combine_wildcard + "_plus.bw"), df = metadata_aoi.itertuples(), prime = ["p3", "p5"])
     output:
         touch("indicator/proseq/all.done")
