@@ -33,52 +33,57 @@ library(ggpubr)
 library(ggpointdensity)
 library(viridis)
 
-# #### testing files ####
-# root_dir <- "~/Desktop/github/unimod_human"
+#### testing files ####
+root_dir <- "~/Desktop/github/unimod_pausing"
 
-# helper_tc_in <- file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
-# helper_pr_in <- file.path(root_dir, "scripts/unimod/helper_function_em_pause_release.R")
+helper_tc_in <- file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
+helper_pr_in <- file.path(root_dir, "scripts/unimod/helper_function_em_pause_release.R")
 
-# rc1_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_NVP2_Ctrl-SE/pause_release/rate.RDS")
-# rc2_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_NVP2-SE/pause_release/rate.RDS")
+rc1_in <-
+  file.path(
+    root_dir,
+    "outputs/within_sample/PROseq-DLD1-aoi-NELFC_NVP2_Ctrl-SE/pause_release/rate.RDS"
+  )
+rc2_in <-
+  file.path(
+    root_dir,
+    "outputs/within_sample/PROseq-DLD1-aoi-NELFC_NVP2-SE/pause_release/rate.RDS"
+  )
 
-# # rate1_in <- file.path(root_dir, "outputs/within_sample/PROseq-K562-dukler-control-SE/steric_hindrance/rate.csv")
-# # rate2_in <- file.path(root_dir, "outputs/within_sample/PROseq-K562-dukler-treated-SE/steric_hindrance/rate.csv")
+# rc1_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE/pause_release/rate.RDS")
+# rc2_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Fp-SE/pause_release/rate.RDS")
 
-# # rc1_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE/pause_release/rate.RDS")
-# # rc2_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Fp-SE/pause_release/rate.RDS")
+# rc1_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE/pause_release/rate.RDS")
+# rc2_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin-SE/pause_release/rate.RDS")
 
-# # rc1_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE/pause_release/rate.RDS")
-# # rc2_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin-SE/pause_release/rate.RDS")
+spike_in <- file.path(root_dir, "metadata/scaling_factor.csv")
 
-# spike_in <- file.path(root_dir, "metadata/scaling_factor.csv")
+quantile_normalization <- "identity"
 
-# quantile_normalization <- "identity"
+# Null is for summing reads across samples, bioreplicate is for comparison between
+# biological replicates to ensure not too many false positive are seen when there is
+# no real changes
 
-# # Null is for summing reads across samples, bioreplicate is for comparison between
-# # biological replicates to ensure not too many false positive are seen when there is
-# # no real changes
+replicates <- "all"
 
-# replicates <- "all"
-# # replicates <- "-bioreplicate"
+result_dir <-
+  file.path(
+    root_dir, "outputs/between_samples",
+    paste0("PROseq-DLD1-aoi-NELFC_NVP2-SE", "-", quantile_normalization, "-", replicates)
+  )
+# result_dir <-
+#   file.path(root_dir, "outputs/between_samples",
+#             paste0("PROseq-DLD1-aoi-NELFC_Fp-SE", "-", quantile_normalization, "-", replicates))
 
 # result_dir <-
 #   file.path(root_dir, "outputs/between_samples",
-#             paste0("PROseq-DLD1-aoi-NELFC_NVP2-SE", "-", quantile_normalization, "-", replicates))
-# # result_dir <-
-# #   file.path(root_dir, "outputs/between_samples",
-# #             paste0("PROseq-DLD1-aoi-NELFC_Fp-SE", "-", quantile_normalization, "-", replicates))
+#             paste0("PROseq-DLD1-aoi-NELFC_Auxin-SE", "-", quantile_normalization, "-", replicates))
 
-# # result_dir <-
-# #   file.path(root_dir, "outputs/between_samples",
-# #             paste0("PROseq-DLD1-aoi-NELFC_Auxin-SE", "-", quantile_normalization, "-", replicates))
+omega_out <- file.path(result_dir, "omega.csv")
+# alpha_out <- file.path(result_dir, "alpha.csv")
+beta_out <- file.path(result_dir, "beta.csv")
 
-
-# omega_out <- file.path(result_dir, "omega.csv")
-# # alpha_out <- file.path(result_dir, "alpha.csv")
-# beta_out <- file.path(result_dir, "beta.csv")
-
-# #### end of parsing arguments ####
+#### end of parsing arguments ####
 theme_set(cowplot::theme_cowplot())
 
 # set up parameters
@@ -379,7 +384,7 @@ p <- omega_tbl %>%
     palette = c("#00AFBB", "#E7B800", "#FC4E07"),
     outlier.shape = NA, notch = TRUE
   ) +
-  stat_compare_means(label.x.npc = "left", label.y = scale_tbl$chi_ymax) +
+  stat_compare_means() +
   scale_x_discrete(labels = c("chi1" = "Control", "chi2" = "Treated")) +
   labs(x = "", y = expression(log[2] * chi)) +
   coord_cartesian(ylim = c(scale_tbl$chi_ymin, scale_tbl$chi_ymax)) +
