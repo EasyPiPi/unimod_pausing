@@ -7,7 +7,7 @@ rule generate_counting_region:
         tts_length = config["tts_length"], # parameter m
         gb_min_length = config["gb_min_length"], 
         gb_max_length = config["gb_max_length"], 
-        dist_to_tss = config["gb_max_length"]
+        dist_to_tss = config["dist_to_tss"]
     threads:1
     log:
         os.path.join("logs/generate_counting_region", "{cell_line}.log")
@@ -53,17 +53,6 @@ rule analyze_one_sample_steric_hindrance:
         rate_tbl = os.path.join("outputs/within_sample", combine_wildcard, "steric_hindrance", "rate.csv")
     script:
         "../scripts/unimod/analyze_one_sample_poisson_steric_hindrance.R"
-
-rule compare_rates_across_samples:
-    input:
-        expand(os.path.join("outputs/within_sample", expand_combine_wildcard, "pause_release", "rate.RDS"), df = metadata.itertuples())
-    threads:1
-    log:
-        os.path.join("logs/compare_rates_across_samples", "run.log")
-    output:
-        touch("indicator/compare_rates_across_samples/run.done")
-    script:
-        "../scripts/unimod/compare_rates_across_samples.R"
 
 rule analyze_two_samples:
     input:

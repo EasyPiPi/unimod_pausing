@@ -37,35 +37,30 @@ expand_combine_wildcard = "{df.assay}-{df.cell_line}-{df.reference}-{df.group}-{
 #### rules ####
 rule all:
     input:
-        #### Prepocessing ####
-        ## PRO-seq ##
+        #### Experimental Data ####
+        ## Preprocessing ##
+        # PRO-seq 
         "indicator/proseq/all.done",
-        ## coPRO-seq ##
+        # PRO-cap liftover 
         expand(os.path.join("ext_data/copro/hg38", "{sample}" + ".bw"), sample = croprodata.file_name),
         ## find active TSSs ##
         "outputs/read_dt/human_transcript_granges.rds",
-        # #### Rate estimates ####
-        # ## Simulation ##
-        # "indicator/simulation/pause_release.done",
-        # "indicator/simulation/steric_hindrance.done",
-        # ## Experiment - replicate ##
-        # expand(os.path.join("outputs/within_replicate", expand_sample_wildcard, "pause_release", "rate.RDS"), df = metadata.itertuples()),
-        # ## Experiment - sample ##
-        # expand(os.path.join("outputs/within_sample", expand_combine_wildcard, "pause_release", "rate.RDS"), df = metadata.itertuples()),
-        # expand(os.path.join("outputs/within_sample", expand_combine_wildcard, "pause_release", "rate.RDS"), df = metadata_aoi.itertuples()),
-        # expand(os.path.join("outputs/within_sample", expand_combine_wildcard, "steric_hindrance", "rate.csv"), df = metadata.itertuples()),
-        # # compare transcription rate and pause sites across samples #
-        # "indicator/compare_rates_across_samples/run.done",
-        # #### LRT ####
-        # ## Simulation ##
-        # expand(os.path.join("outputs/simulation/tables/lrt_matched_cov", "{param_id}_{lambda_exp}.RDS"), param_id = lrt_params.param_id, lambda_exp = ["lrt_high", "lrt_median", "lrt_low"]),
-        # ## Experiment ##
+        ## Rate estimates ##
+        expand(os.path.join("outputs/within_sample", expand_combine_wildcard, "pause_release", "rate.RDS"), df = metadata_aoi.itertuples()),
+        # expand(os.path.join("outputs/within_sample", expand_combine_wildcard, "steric_hindrance", "rate.csv"), df = metadata_aoi.itertuples()),
+        ## LRT ##
         # expand(os.path.join("outputs/between_samples", "{df.assay}-{df.cell_line}-{df.reference}-{df.read_type}-{normalization}-{replicates}", "omega.csv"), df = metadata.itertuples(), normalization = ["identity"], replicates = ["all"]),
         # expand(os.path.join("indicator/visualize_two_samples", "{df.assay}-{df.cell_line}-{df.reference}-{df.read_type}-{normalization}-{replicates}" + ".done"), df = metadata.itertuples(), normalization = ["identity"], replicates = ["all"]),
-        # ## GSEA analyses ##
-        # # expand(os.path.join("indicator/do_gsea", "{df.assay}-{df.cell_line}-{df.reference}-{df.read_type}-{normalization}-{replicates}" + ".complete"), df = metadata.itertuples(), normalization = ["identity"], replicates = ["all"]),
+        ## GSEA analyses ##
+        # expand(os.path.join("indicator/do_gsea", "{df.assay}-{df.cell_line}-{df.reference}-{df.read_type}-{normalization}-{replicates}" + ".complete"), df = metadata.itertuples(), normalization = ["identity"], replicates = ["all"]),
+        # #### Simulation ####
+        # "indicator/simulation/pause_release.done",
+        # "indicator/simulation/steric_hindrance.done",
+        # ## LRT ##
+        # expand(os.path.join("outputs/simulation/tables/lrt_matched_cov", "{param_id}_{lambda_exp}.RDS"), param_id = lrt_params.param_id, lambda_exp = ["lrt_high", "lrt_median", "lrt_low"]),
+
 
 ##### load rules #####
 include: "rules/proseq.smk"
-# include: "rules/unimod.smk"
+include: "rules/unimod.smk"
 # include: "rules/simulation.smk"

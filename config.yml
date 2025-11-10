@@ -17,6 +17,6 @@ HUMAN_NONOLP_GENE:
 tss_length: 250 # parameter k
 tts_length: 250 # parameter m
 rc_cutoff: 10 # cutoff for PRO-cap 5' end read count to be considered as active
-gb_min_length: 6e3 # filter out genes shorter than this length
-gb_max_length: 9e4 # when gene is longer than this length, only use length up to this cutoff for read counting
-dist_to_tss: 1e3 # distance to TSS and TTS for gene body read counting        
+gb_min_length: 6000 # filter out genes shorter than this length
+gb_max_length: 90000 # when gene is longer than this length, only use length up to this cutoff for read counting
+dist_to_tss: 1000 # distance to TSS and TTS for gene body read counting        
