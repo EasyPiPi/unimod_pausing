@@ -189,11 +189,11 @@ rule merge_bigwig:
     input:
         expand(os.path.join("outputs/proseq/p5", expand_sample_wildcard, expand_sample_wildcard + "_plus.bw"), df = metadata_aoi.itertuples()),
         expand(os.path.join("indicator/proseq/p3", expand_sample_wildcard + ".complete"), df = metadata_aoi.itertuples()),
-        chrominfo = config["HUMAN_CHROMINFO"]           
-    params:
-        threshold = 1e9,
+        chrominfo = config["HUMAN_CHROMINFO"],
         bw_plus = lambda wc: get_bigwig_files(wc, strand = "plus"),
-        bw_minus = lambda wc: get_bigwig_files(wc, strand = "minus")
+        bw_minus = lambda wc: get_bigwig_files(wc, strand = "minus")           
+    params:
+        threshold = 1e9
     output:
         bedgraph_plus = temp(os.path.join('tmp/proseq/{prime}', combine_wildcard + '_plus_sorted.bedGraph')),
         bedgraph_minus = temp(os.path.join('tmp/proseq/{prime}', combine_wildcard + '_minus_sorted.bedGraph')),
@@ -202,23 +202,13 @@ rule merge_bigwig:
     run:
         # specify how to handle studies without replicates
         # if wildcards.reference not in ["chivu", "aoi"]:
-        if len({params.bw_plus}) >= 2:
-            shell(
-                """
-                bigWigMerge {params.bw_plus} /dev/stdout | sort -k1,1 -k2,2n - > {output.bedgraph_plus}
-                bigWigMerge -threshold=-{params.threshold} {params.bw_minus} /dev/stdout | sort -k1,1 -k2,2n - > {output.bedgraph_minus}
-                bedGraphToBigWig {output.bedgraph_plus} {input.chrominfo} {output.bw_plus}
-                bedGraphToBigWig {output.bedgraph_minus} {input.chrominfo} {output.bw_minus}
-                """
-            )
-        else:
-            shell(
-                """
-                touch {output.bedgraph_plus} {output.bedgraph_minus}
-                ln -sfr {input.bw_plus} {output.bw_plus}
-                ln -sfr {input.bw_minus} {output.bw_minus}
-                """
-            )
+        shell(
+            """
+            touch {output.bedgraph_plus} {output.bedgraph_minus}
+            ln -sfr {input.bw_plus} {output.bw_plus}
+            ln -sfr {input.bw_minus} {output.bw_minus}
+            """
+        )
 
 # expand to generate read counts for both 5 prime and 3 prime end
 rule proseq_done:
@@ -239,7 +229,7 @@ rule crossmap_copro:
     params:
         bw = os.path.join("ext_data/copro/hg38", "{sample}")
     shell:
-        "CrossMap.py bigwig {input.chain} {input.bw} {params.bw}"
+        "CrossMap bigwig {input.chain} {input.bw} {params.bw}"
 
 # find active TSSs based on PRO-cap data and plot read counts
 rule get_human_transcripts:

@@ -40,10 +40,10 @@ rule all:
         #### Prepocessing ####
         ## PRO-seq ##
         "indicator/proseq/all.done",
-        # ## coPRO-seq ##
-        # expand(os.path.join("ext_data/copro/hg38", "{sample}" + ".bw"), sample = croprodata.file_name),
-        # # ## find active TSSs ##
-        # # "outputs/read_dt/human_transcript_granges.rds",
+        ## coPRO-seq ##
+        expand(os.path.join("ext_data/copro/hg38", "{sample}" + ".bw"), sample = croprodata.file_name),
+        ## find active TSSs ##
+        "outputs/read_dt/human_transcript_granges.rds",
         # #### Rate estimates ####
         # ## Simulation ##
         # "indicator/simulation/pause_release.done",
