@@ -34,37 +34,37 @@ result_dir <- snakemake@params[["result_dir"]]
 rate_calibrated_out <- snakemake@output[["rate_calibrated"]]
 rate_tbl_out <- snakemake@output[["rate_tbl"]]
 
-#### testing files ####
-root_dir <- "~/Desktop/github/unimod_pausing"
+# #### testing files ####
+# root_dir <- "~/Desktop/github/unimod_pausing"
 
-grng_in <-
-  file.path(root_dir, "outputs/read_dt/granges_for_read_counting_DLD1.RData")
+# grng_in <-
+#   file.path(root_dir, "outputs/read_dt/granges_for_read_counting_DLD1.RData")
 
-bwp1_p3_in <- file.path(
-  root_dir,
-  "outputs/bigwig/p3/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE_plus.bw"
-)
-bwm1_p3_in <- file.path(
-  root_dir,
-  "outputs/bigwig/p3/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE_minus.bw"
-)
+# bwp1_p3_in <- file.path(
+#   root_dir,
+#   "outputs/bigwig/p3/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE_plus.bw"
+# )
+# bwm1_p3_in <- file.path(
+#   root_dir,
+#   "outputs/bigwig/p3/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE_minus.bw"
+# )
 
-helper_in <- file.path(root_dir, "scripts/unimod/helper_function.R")
-em_in <- file.path(root_dir, "scripts/unimod/helper_function_em_pause_release.R")
+# helper_in <- file.path(root_dir, "scripts/unimod/helper_function.R")
+# em_in <- file.path(root_dir, "scripts/unimod/helper_function_em_pause_release.R")
 
-result_dir <-
-  file.path(
-    root_dir,
-    "outputs/within_sample", "PROseq-DLD1-aoi-NELFC_Auxin_Ctrl", "pause_release"
-  )
+# result_dir <-
+#   file.path(
+#     root_dir,
+#     "outputs/within_sample", "PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE", "pause_release"
+#   )
 
-rate_calibrated_out <- file.path(result_dir, "rate_calibrated.csv")
-rate_tbl_out <- file.path(result_dir, "rate.RDS")
+# rate_calibrated_out <- file.path(result_dir, "rate_calibrated.csv")
+# rate_tbl_out <- file.path(result_dir, "rate.RDS")
 
-# load saved files to save some time
-# load(file.path(result_dir, "model_adaptation.RData"))
+# # load saved files to save some time
+# # load(file.path(result_dir, "model_adaptation.RData"))
 
-#### end of parsing arguments ####
+# #### end of parsing arguments ####
 # set up parameters
 k <- 50
 kmin <- 1
