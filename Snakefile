@@ -23,7 +23,8 @@ def make_metadata(file_path, selected_column = sel_col):
 
 #### metadata ####
 metadata_aoi = make_metadata("metadata/metadata_aoi.csv")
-croprodata = pd.read_csv("metadata/copro_sample.csv", dtype=str)
+metadata_procap = pd.read_csv("metadata/copro_sample.csv", dtype=str)
+metadata_comparison = pd.read_csv("metadata/metadata_comparison.csv", dtype=str)
 
 # simulations for LRT
 lrt_params = pd.read_csv("metadata/simulation_params_lrt.csv", dtype=str)
@@ -42,14 +43,14 @@ rule all:
         # PRO-seq 
         "indicator/proseq/all.done",
         # PRO-cap liftover 
-        expand(os.path.join("ext_data/copro/hg38", "{sample}" + ".bw"), sample = croprodata.file_name),
+        expand(os.path.join("ext_data/copro/hg38", "{sample}" + ".bw"), sample = metadata_procap.file_name),
         ## find active TSSs ##
         "outputs/read_dt/human_transcript_granges.rds",
         ## Rate estimates ##
         expand(os.path.join("outputs/within_sample", expand_combine_wildcard, "pause_release", "rate.RDS"), df = metadata_aoi.itertuples()),
-        # expand(os.path.join("outputs/within_sample", expand_combine_wildcard, "steric_hindrance", "rate.csv"), df = metadata_aoi.itertuples()),
         ## LRT ##
-        # expand(os.path.join("outputs/between_samples", "{df.assay}-{df.cell_line}-{df.reference}-{df.read_type}-{normalization}-{replicates}", "omega.csv"), df = metadata.itertuples(), normalization = ["identity"], replicates = ["all"]),
+        expand(os.path.join("outputs/between_samples", "{df.group_1}" + "_vs_" + "{df.group_2}", "omega.csv"), df = metadata_comparison.itertuples()),
+
         # expand(os.path.join("indicator/visualize_two_samples", "{df.assay}-{df.cell_line}-{df.reference}-{df.read_type}-{normalization}-{replicates}" + ".done"), df = metadata.itertuples(), normalization = ["identity"], replicates = ["all"]),
         ## GSEA analyses ##
         # expand(os.path.join("indicator/do_gsea", "{df.assay}-{df.cell_line}-{df.reference}-{df.read_type}-{normalization}-{replicates}" + ".complete"), df = metadata.itertuples(), normalization = ["identity"], replicates = ["all"]),

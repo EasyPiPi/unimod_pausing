@@ -35,47 +35,23 @@ rule analyze_one_sample_pause_release:
     script:
         "../scripts/unimod/analyze_one_sample_poisson_pause_release.R"
 
-rule analyze_one_sample_steric_hindrance:
-    input:
-        grng = rules.generate_counting_region.output.grng,
-        bwp1_p3 = os.path.join("outputs/bigwig/p3", combine_wildcard + "_plus.bw"),
-        bwm1_p3 = os.path.join("outputs/bigwig/p3", combine_wildcard + "_minus.bw"),
-        scale = "outputs/between_samples/table/scale_factor.csv"
-    params:
-        helper = "scripts/unimod/helper_function.R",
-        em = "scripts/unimod/helper_function_em_steric_hindrance.R",
-        sample_id = combine_wildcard,
-        result_dir = os.path.join("outputs/within_sample", combine_wildcard, "steric_hindrance")
-    threads:1
-    log:
-        os.path.join("logs/analyze_one_sample", combine_wildcard + "_steric_hindrance.log")
-    output:
-        rate_tbl = os.path.join("outputs/within_sample", combine_wildcard, "steric_hindrance", "rate.csv")
-    script:
-        "../scripts/unimod/analyze_one_sample_poisson_steric_hindrance.R"
-
 rule analyze_two_samples:
     input:
-        rc1 = os.path.join("outputs/within_sample", "{assay}-{cell_line}-{reference}-control-{read_type}", "pause_release", "rate.RDS"),
-        rc2 = os.path.join("outputs/within_sample", "{assay}-{cell_line}-{reference}-treated-{read_type}", "pause_release", "rate.RDS"),
-        rate1 = os.path.join("outputs/within_sample", "{assay}-{cell_line}-{reference}-control-{read_type}", "steric_hindrance", "rate.csv"),
-        rate2 = os.path.join("outputs/within_sample", "{assay}-{cell_line}-{reference}-treated-{read_type}", "steric_hindrance", "rate.csv"),
+        rc1 = os.path.join("outputs/within_sample", "PROseq-DLD1-aoi-{group_1}-SE", "pause_release", "rate.RDS"),
+        rc2 = os.path.join("outputs/within_sample", "PROseq-DLD1-aoi-{group_2}-SE", "pause_release", "rate.RDS"),
         spike_in = "metadata/scaling_factor.csv"
     params:
-        quantile_normalization = "{normalization}",
-        replicates = "{replicates}", # Whether using all loci or only gene bodies in the analyzed set to calculate lambda
-        result_dir = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}"),
         helper_tc = "scripts/unimod/helper_function_em_two_condition.R",
-        helper_pr = "scripts/unimod/helper_function_em_pause_release.R"
+        helper_pr = "scripts/unimod/helper_function_em_pause_release.R",
+        result_dir = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}")
     threads:1
     log:
-        os.path.join("logs/analyze_two_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}" + ".log")
+        os.path.join("logs/analyze_two_samples", "{group_1}" + "_vs_" + "{group_2}" + ".log")
     output:
-        omega = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}", "omega.csv"),
-        beta = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}", "beta.csv"),
-        alpha = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}", "alpha.csv")
+        omega = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "omega.csv"),
+        beta = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "beta.csv")
     script:
-        "../scripts/unimod/analyze_two_samples.R"
+        "../scripts/unimod/analyze_two_samples_DLD1.R"
 
 rule visualize_two_samples:
     input:

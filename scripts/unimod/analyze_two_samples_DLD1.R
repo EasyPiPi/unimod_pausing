@@ -10,13 +10,8 @@ sink(file = log, type = "message")
 #### snakemake files ####
 rc1_in <- snakemake@input[["rc1"]]
 rc2_in <- snakemake@input[["rc2"]]
-rate1_in <- snakemake@input[["rate1"]]
-rate2_in <- snakemake@input[["rate2"]]
 
 spike_in <- snakemake@input[["spike_in"]]
-
-quantile_normalization <- snakemake@params[["quantile_normalization"]] # "identity", "qnorm"
-replicates <- snakemake@params[["replicates"]] # all
 
 helper_tc_in <- snakemake@params[["helper_tc"]]
 helper_pr_in <- snakemake@params[["helper_pr"]]
@@ -25,7 +20,7 @@ result_dir <- snakemake@params[["result_dir"]]
 
 omega_out <- snakemake@output[["omega"]]
 beta_out <- snakemake@output[["beta"]]
-alpha_out <- snakemake@output[["alpha"]]
+#### end of parsing arguments ####
 
 #### load packages ####
 library(tidyverse)
@@ -33,60 +28,46 @@ library(ggpubr)
 library(ggpointdensity)
 library(viridis)
 
-#### testing files ####
-root_dir <- "~/Desktop/github/unimod_pausing"
+# #### testing files ####
+# root_dir <- "~/Desktop/github/unimod_pausing"
 
-helper_tc_in <- file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
-helper_pr_in <- file.path(root_dir, "scripts/unimod/helper_function_em_pause_release.R")
+# helper_tc_in <- file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
+# helper_pr_in <- file.path(root_dir, "scripts/unimod/helper_function_em_pause_release.R")
 
-rc1_in <-
-  file.path(
-    root_dir,
-    "outputs/within_sample/PROseq-DLD1-aoi-NELFC_NVP2_Ctrl-SE/pause_release/rate.RDS"
-  )
-rc2_in <-
-  file.path(
-    root_dir,
-    "outputs/within_sample/PROseq-DLD1-aoi-NELFC_NVP2-SE/pause_release/rate.RDS"
-  )
+# rc1_in <-
+#   file.path(
+#     root_dir,
+#     "outputs/within_sample/PROseq-DLD1-aoi-NELFC_NVP2_Ctrl-SE/pause_release/rate.RDS"
+#   )
+# rc2_in <-
+#   file.path(
+#     root_dir,
+#     "outputs/within_sample/PROseq-DLD1-aoi-NELFC_NVP2-SE/pause_release/rate.RDS"
+#   )
 
-# rc1_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE/pause_release/rate.RDS")
-# rc2_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Fp-SE/pause_release/rate.RDS")
+# # rc1_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE/pause_release/rate.RDS")
+# # rc2_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Fp-SE/pause_release/rate.RDS")
 
-# rc1_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE/pause_release/rate.RDS")
-# rc2_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin-SE/pause_release/rate.RDS")
+# # rc1_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin_Ctrl-SE/pause_release/rate.RDS")
+# # rc2_in <- file.path(root_dir, "outputs/within_sample/PROseq-DLD1-aoi-NELFC_Auxin-SE/pause_release/rate.RDS")
 
-spike_in <- file.path(root_dir, "metadata/scaling_factor.csv")
-
-quantile_normalization <- "identity"
-
-# Null is for summing reads across samples, bioreplicate is for comparison between
-# biological replicates to ensure not too many false positive are seen when there is
-# no real changes
-
-replicates <- "all"
-
-result_dir <-
-  file.path(
-    root_dir, "outputs/between_samples",
-    paste0("PROseq-DLD1-aoi-NELFC_NVP2-SE", "-", quantile_normalization, "-", replicates)
-  )
-# result_dir <-
-#   file.path(root_dir, "outputs/between_samples",
-#             paste0("PROseq-DLD1-aoi-NELFC_Fp-SE", "-", quantile_normalization, "-", replicates))
+# spike_in <- file.path(root_dir, "metadata/scaling_factor.csv")
 
 # result_dir <-
-#   file.path(root_dir, "outputs/between_samples",
-#             paste0("PROseq-DLD1-aoi-NELFC_Auxin-SE", "-", quantile_normalization, "-", replicates))
+#   file.path(
+#     root_dir, "outputs/between_samples",
+#     paste0("NELFC_NVP2_Ctrl", "_vs_", "NELFC_NVP2")
+#   )
 
-omega_out <- file.path(result_dir, "omega.csv")
-# alpha_out <- file.path(result_dir, "alpha.csv")
-beta_out <- file.path(result_dir, "beta.csv")
+# omega_out <- file.path(result_dir, "omega.csv")
+# beta_out <- file.path(result_dir, "beta.csv")
 
-#### end of parsing arguments ####
+# # #### end of parsing arguments ####
 theme_set(cowplot::theme_cowplot())
 
 # set up parameters
+quantile_normalization <- "identity"
+
 k <- 50
 kmin <- 1
 kmax <- 200 # also used as k on the poisson case
@@ -144,34 +125,6 @@ omega_tbl <- omega_tbl %>%
 
 omega_tbl <- omega_tbl %>%
   mutate(padj = p.adjust(p, method = "BH"))
-
-# ## LRT for alpha ##
-# # read in phi estimates from the steric hindrance model
-# rate1 <- read_csv(rate1_in, show_col_types = FALSE)
-# rate2 <- read_csv(rate2_in, show_col_types = FALSE)
-#
-# rate1 <- rate1[match(gn_union, rate1$gene_id), ]
-# rate2 <- rate2[match(gn_union, rate2$gene_id), ]
-#
-# tao1 <- lambda1 * (1 - rate1$phi) / (lambda1 * (1 - rate1$phi) + lambda2 * (1 - rate2$phi))
-# tao2 <- 1 - tao1
-#
-# alpha_tbl <-
-#   tibble(gene_id = rate1$gene_id,
-#          chi1 = rate1$chi,
-#          chi2 = rate2$chi * lambda1 / lambda2,
-#          alpha_zeta1 = rate1$alpha_zeta,
-#          alpha_zeta2 = rate2$alpha_zeta,
-#          phi1 = rate1$phi,
-#          phi2 = rate2$phi)
-#
-# alpha_tbl <- alpha_tbl %>%
-#   mutate(lfc = log2(alpha_zeta2 / alpha_zeta1))
-#
-# alpha_tbl <- alpha_tbl %>%
-#   bind_cols(bind_rows(pmap(list(rate1$s, rate2$s, tao1, tao2), omega_lrt)))
-#
-# alpha_tbl <- alpha_tbl %>% mutate(padj = p.adjust(p, method = "BH"))
 
 ## LRT for beta ##
 # need to jointly do EM one more time for H0, which assume betas are the same
@@ -302,15 +255,6 @@ beta_tbl_idx <-
     fk_var2 = map_dbl(em_ht, "fk_var"),
     t_stats = h1_likelihood1 + h1_likelihood2 - h0_likelihood[idx]
   )
-
-# beta_tbl <- beta_tbl %>%
-#   bind_cols(
-#     bind_rows(
-#       pmap(list(s1, s2, t1_h0, t2_h0, t1_h1, t2_h1),
-#            function(x, y, z, k, m, n) {
-#              beta_lrt(s1 = x, s2 = y, t1_h0 = z, t2_h0 = k, t1_h1 = m, t2_h1 = n)
-#            })
-#     ))
 
 beta_tbl <- bind_rows(beta_tbl[!idx, ], beta_tbl_idx)
 
@@ -502,31 +446,6 @@ ggsave(file.path(result_dir, "chi_mean_vs_lfc.png"),
   plot = p,
   width = 6, height = 3
 )
-#
-# alpha_tbl <- alpha_tbl %>%
-#   mutate(alpha_zeta = (alpha_zeta1 + alpha_zeta2) / 2,
-#          logalpha_zeta = log2(alpha_zeta),
-#          category =
-#            case_when(
-#              (padj < 0.05) & (lfc > log2(1.2)) ~ "Up",
-#              (padj < 0.05) & (lfc < log2(0.8)) ~ "Down",
-#              TRUE ~ "Others"
-#            ),
-#          category = factor(category, levels = c("Up", "Down", "Others")))
-#
-# p <- alpha_tbl %>%
-#   ggplot(aes(x = logalpha_zeta, y = lfc, color = category)) +
-#   geom_point(alpha = 0.5, size = 0.5) +
-#   scale_color_manual(values=c("#E41A1C", "#377EB8", "gray")) +
-#   geom_hline(yintercept = 0, linetype = "dashed", color = "gray") +
-#   ylim(-10, 10) +
-#   labs(y = expression(log[2]*"FC(Treated/Control)"),
-#        x = expression(log[2]*"mean("*alpha*zeta*")"),
-#        color = "Category") +
-#   cowplot::theme_cowplot()
-#
-# ggsave(file.path(result_dir, "alpha_mean_vs_lfc.png"), plot = p,
-#        width = 6, height = 3)
 
 beta_tbl <- beta_tbl %>%
   mutate(
@@ -560,46 +479,13 @@ ggsave(file.path(result_dir, "beta_mean_vs_lfc.png"),
   width = 6, height = 3
 )
 
-# beta_tbl %>% filter(category == "Up") %>%
-#   select(beta1, beta2) %>%
-#   pivot_longer(cols = contains("beta")) %>%
-#   mutate(value = log2(value * zeta)) %>%
-#   ggboxplot(x = "name", y = "value", fill = "name",
-#             palette = c("#00AFBB", "#E7B800", "#FC4E07"),
-#             outlier.shape = NA, notch = TRUE) +
-#   stat_compare_means(label.x.npc = "left", label.y = scale_tbl$beta_ymax) +
-#   scale_x_discrete(labels=c("beta1" = "Control", "beta2" = "Treated")) +
-#   labs(x = "", y = expression(log[2]*beta*zeta)) +
-#   coord_cartesian(ylim = c(scale_tbl$beta_ymin, scale_tbl$beta_ymax)) +
-#   theme(legend.position = "none")
-#
-# beta_up <- beta_tbl %>% filter(category == "Up") %>% pull(gene_id)
-#
-# omega_tbl %>%
-#   filter(gene_id %in% beta_up) %>%
-#   select(chi1, chi2) %>%
-#   pivot_longer(cols = contains("chi")) %>%
-#   mutate(value = log2(value)) %>%
-#   ggboxplot(x = "name", y = "value", fill = "name",
-#             palette = c("#00AFBB", "#E7B800", "#FC4E07"),
-#             outlier.shape = NA, notch = TRUE) +
-#   stat_compare_means(label.x.npc = "left", label.y = scale_tbl$chi_ymax) +
-#   scale_x_discrete(labels=c("chi1" = "Control", "chi2" = "Treated")) +
-#   labs(x = "", y = expression(log[2]*chi)) +
-#   coord_cartesian(ylim = c(scale_tbl$chi_ymin, scale_tbl$chi_ymax)) +
-#   theme(legend.position = "none")
-
 # Changes of initiation and pause release rates
 lfc_tbl <- omega_tbl %>%
   select(gene_id, lfc, category) %>%
   inner_join(beta_tbl %>% select(gene_id, lfc, category),
     by = "gene_id", suffix = c("_chi", "_beta")
   )
-#
-# lfc_tbl <- lfc_tbl %>%
-#   left_join(alpha_tbl %>% select(gene_id, lfc, category), by = "gene_id") %>%
-#   rename(lfc_alpha = lfc, category_alpha = category)
-#
+
 p <- lfc_tbl %>%
   ggscatter(
     x = "lfc_chi", y = "lfc_beta",
@@ -610,9 +496,7 @@ p <- lfc_tbl %>%
     cor.coeff.args = list(
       method = "pearson", label.sep = "\n",
       label.x.npc = "left", label.y.npc = "top"
-    ),
-    xlab = expression(log[2] * "(" * chi["Treated"] / chi["Control"] * ")"),
-    ylab = expression(log[2] * "(" * beta["Treated"] / beta["Control"] * ")")
+    )
   ) +
   ylim(-8, 4) +
   xlim(-6, 6)
@@ -621,23 +505,7 @@ ggsave(file.path(result_dir, "lfc_chi_vs_beta.png"),
   plot = p,
   width = 6, height = 5
 )
-#
-# p <- lfc_tbl %>%
-#   ggscatter(x = "lfc_alpha", y = "lfc_beta",
-#             add = "reg.line", alpha = 0.2,
-#             add.params = list(color = "blue", fill = "lightgray"), # Customize reg. line
-#             conf.int = TRUE, # Add confidence interval
-#             cor.coef = TRUE, # Add correlation coefficient. see ?stat_cor
-#             cor.coeff.args = list(method = "pearson", label.sep = "\n",
-#                                   label.x.npc = "left", label.y.npc = "top"),
-#             xlab = expression(log[2]*"("*alpha["Treated"]/alpha["Control"]*")"),
-#             ylab = expression(log[2]*"("*beta["Treated"]/beta["Control"]*")")) +
-#   ylim(-11, 11) +
-#   xlim(-11, 11)
-#
-# ggsave(file.path(result_dir, "lfc_alpha_vs_beta.png"), plot = p,
-#        width = 6, height = 5)
-#
+
 # Number of genes with differential rates
 lfc_summary <- lfc_tbl %>%
   select(contains("category")) %>%
