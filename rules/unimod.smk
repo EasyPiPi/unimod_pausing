@@ -55,38 +55,21 @@ rule analyze_two_samples:
 
 rule visualize_two_samples:
     input:
-        grng = rules.generate_counting_region.output.grng,
+        grng = "outputs/read_dt/granges_for_read_counting_DLD1.RData",
         gtf = rules.get_human_transcripts.output.gtf,
         spike_in = "metadata/scaling_factor.csv",
-        bwp1_p3 = os.path.join("outputs/bigwig/p3", "{assay}-{cell_line}-{reference}-control-{read_type}" + "_plus.bw"),
-        bwm1_p3 = os.path.join("outputs/bigwig/p3", "{assay}-{cell_line}-{reference}-control-{read_type}" + "_minus.bw"),
-        bwp2_p3 = os.path.join("outputs/bigwig/p3", "{assay}-{cell_line}-{reference}-treated-{read_type}" + "_plus.bw"),
-        bwm2_p3 = os.path.join("outputs/bigwig/p3", "{assay}-{cell_line}-{reference}-treated-{read_type}" + "_minus.bw"),
-        beta = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}", "beta.csv"),
-        omega = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}", "omega.csv"),
-        alpha = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}", "alpha.csv"),
-        tf_target = "outputs/between_samples/table/gsea_targets.csv"
+        bwp1_p3 = os.path.join("outputs/bigwig/p3", "PROseq-DLD1-aoi-{group_1}-SE" + "_plus.bw"),
+        bwm1_p3 = os.path.join("outputs/bigwig/p3", "PROseq-DLD1-aoi-{group_1}-SE" + "_minus.bw"),
+        bwp2_p3 = os.path.join("outputs/bigwig/p3", "PROseq-DLD1-aoi-{group_2}-SE" + "_plus.bw"),
+        bwm2_p3 = os.path.join("outputs/bigwig/p3", "PROseq-DLD1-aoi-{group_2}-SE" + "_minus.bw"),
+        beta = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "beta.csv"),
+        omega = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "omega.csv")
     params:
-        result_dir = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}")
+        result_dir = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}")
     threads:1
     log:
-        os.path.join("logs/visualize_two_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}" + ".log")
+        os.path.join("logs/visualize_two_samples", "{group_1}" + "_vs_" + "{group_2}" + "visualization.log")
     output:
-        touch(os.path.join("indicator/visualize_two_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}" + ".done"))
+        touch(os.path.join("indicator/visualize_two_samples", "{group_1}" + "_vs_" + "{group_2}" + ".done"))
     script:
         "../scripts/unimod/visualize_two_samples.R"
-
-# rule do_gsea:
-#     input:
-#         omega = rules.analyze_two_samples.output.omega,
-#         beta = rules.analyze_two_samples.output.beta
-#     params:
-#         prop = 0.1, # proportion of genes to be considered in a GSEA enrichment analysis,
-#         result_dir = os.path.join("outputs/between_samples", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}", "go")
-#     threads:2
-#     log:
-#         os.path.join("logs/do_gsea", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}" + ".log")
-#     output:
-#         touch(os.path.join("indicator/do_gsea", "{assay}-{cell_line}-{reference}-{read_type}-{normalization}-{replicates}" + ".complete"))
-#     script:
-#         "../scripts/go/do_gsea_within_study.R"

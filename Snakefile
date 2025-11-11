@@ -50,10 +50,7 @@ rule all:
         expand(os.path.join("outputs/within_sample", expand_combine_wildcard, "pause_release", "rate.RDS"), df = metadata_aoi.itertuples()),
         ## LRT ##
         expand(os.path.join("outputs/between_samples", "{df.group_1}" + "_vs_" + "{df.group_2}", "omega.csv"), df = metadata_comparison.itertuples()),
-
-        # expand(os.path.join("indicator/visualize_two_samples", "{df.assay}-{df.cell_line}-{df.reference}-{df.read_type}-{normalization}-{replicates}" + ".done"), df = metadata.itertuples(), normalization = ["identity"], replicates = ["all"]),
-        ## GSEA analyses ##
-        # expand(os.path.join("indicator/do_gsea", "{df.assay}-{df.cell_line}-{df.reference}-{df.read_type}-{normalization}-{replicates}" + ".complete"), df = metadata.itertuples(), normalization = ["identity"], replicates = ["all"]),
+        expand(os.path.join("indicator/visualize_two_samples", "{df.group_1}" + "_vs_" + "{df.group_2}" + ".done"), df = metadata_comparison.itertuples()),
         # #### Simulation ####
         # "indicator/simulation/pause_release.done",
         # "indicator/simulation/steric_hindrance.done",
