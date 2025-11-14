@@ -13,6 +13,7 @@ import operator
 idx = pd.IndexSlice
 
 ##### metadata #####
+## Experimental data ##
 sel_col = ['assay', 'cell_line', 'reference', 'group', 'read_type', 'replicate']
 # metadata for samples
 def make_metadata(file_path, selected_column = sel_col):
@@ -21,13 +22,19 @@ def make_metadata(file_path, selected_column = sel_col):
     metadata.sort_index(inplace = True)
     return metadata
 
-#### metadata ####
 metadata_aoi = make_metadata("metadata/metadata_aoi.csv")
 metadata_procap = pd.read_csv("metadata/copro_sample.csv", dtype=str)
 metadata_comparison = pd.read_csv("metadata/metadata_comparison.csv", dtype=str)
 
+## Simulated data ##
+# simulation parameters for pause release
+metadata_pr_params = pd.read_csv("metadata/simulation_params_pause_release.csv", dtype=str)
+# simulation parameters for steric hindrance
+metadata_st_params = pd.read_csv("metadata/simulation_params_steric_hindrance.csv", dtype=str)
+# combine simulations from steric hindrance for pause release
+metadata_pr_params = pd.concat([metadata_pr_params, metadata_st_params[(metadata_st_params["k_range"] == "50") & (metadata_st_params["add_space_range"] == "17")]], axis = 0, ignore_index=True)
 # simulations for LRT
-lrt_params = pd.read_csv("metadata/simulation_params_lrt.csv", dtype=str)
+metadata_lrt_params = pd.read_csv("metadata/simulation_params_lrt.csv", dtype=str)
 
 #### store wildcard for easier access ####
 sample_wildcard = "{assay}-{cell_line}-{reference}-{group}-{read_type}-{replicate}"
@@ -51,14 +58,14 @@ rule all:
         ## LRT ##
         expand(os.path.join("outputs/between_samples", "{df.group_1}" + "_vs_" + "{df.group_2}", "omega.csv"), df = metadata_comparison.itertuples()),
         expand(os.path.join("indicator/visualize_two_samples", "{df.group_1}" + "_vs_" + "{df.group_2}" + ".done"), df = metadata_comparison.itertuples()),
-        # #### Simulation ####
-        # "indicator/simulation/pause_release.done",
-        # "indicator/simulation/steric_hindrance.done",
-        # ## LRT ##
-        # expand(os.path.join("outputs/simulation/tables/lrt_matched_cov", "{param_id}_{lambda_exp}.RDS"), param_id = lrt_params.param_id, lambda_exp = ["lrt_high", "lrt_median", "lrt_low"]),
+        #### Simulation ####
+        "indicator/simulation/pause_release.done",
+        "indicator/simulation/steric_hindrance.done",
+        ## LRT ##
+        expand(os.path.join("outputs/simulation/tables/lrt_matched_cov", "{param_id}_{lambda_exp}.RDS"), param_id = metadata_lrt_params.param_id, lambda_exp = ["lrt_high", "lrt_median", "lrt_low"]),
 
 
 ##### load rules #####
 include: "rules/proseq.smk"
 include: "rules/unimod.smk"
-# include: "rules/simulation.smk"
+include: "rules/simulation.smk"

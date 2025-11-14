@@ -1,0 +1,17 @@
+./simPol.R -n 20000 -a 0.1 -b 1 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 0.2 -b 1 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 0.5 -b 1 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 0.8 -b 1 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 1 -b 1 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 1.2 -b 1 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 2 -b 1 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 5 -b 1 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 10 -b 1 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 1 -b 0.1 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 1 -b 0.2 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 1 -b 0.5 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 1 -b 0.8 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 1 -b 1.2 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 1 -b 2 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 1 -b 5 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data
+./simPol.R -n 20000 -a 1 -b 10 -z 2000 -t 40 -s 33 -k 50 --kSd=25 --addSpace=17 --geneLen=2000 --zetaSd=1000 --zetaMax=2500 --zetaMin=1500 -d ~/projects/Snakemake_projects/unimod_human/outputs/simulation/data

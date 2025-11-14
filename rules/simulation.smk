@@ -43,7 +43,7 @@ rule subsample_simulation_for_steric_hindrance:
 
 rule summarize_simulation_for_pause_release:
     input:
-        expand(os.path.join("outputs/simulation/tables/rate/pause_release", "{param_id}.RDS"), param_id = simPol_pr_params.param_id),
+        expand(os.path.join("outputs/simulation/tables/rate/pause_release", "{param_id}.RDS"), param_id = metadata_pr_params.param_id),
         meta_pr = "metadata/simulation_params_pause_release.csv",
         meta_st = "metadata/simulation_params_steric_hindrance.csv"
     params:
@@ -59,7 +59,7 @@ rule summarize_simulation_for_pause_release:
 
 rule summarize_simulation_for_steric_hindrance:
     input:
-        expand(os.path.join("outputs/simulation/tables/rate/steric_hindrance", "{param_id}.RDS"), param_id = simPol_st_params.param_id),
+        expand(os.path.join("outputs/simulation/tables/rate/steric_hindrance", "{param_id}.RDS"), param_id = metadata_st_params.param_id),
         meta_st = "metadata/simulation_params_steric_hindrance.csv"
     params:
         table = "outputs/simulation/tables/rate/steric_hindrance",
