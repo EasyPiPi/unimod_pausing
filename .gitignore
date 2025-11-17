@@ -15,7 +15,7 @@ Rprof.out
 data/
 results/
 logs/
-tmp/
+tmp/*
 ext_data/*
 !ext_data/rate/
 ext_data/rate/vihervaara_2017/*
