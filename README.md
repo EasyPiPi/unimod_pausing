@@ -1,40 +1,51 @@
----
-TITLE: "Unimod Pausing Analysis"
-AUTHORS: "Yixin Zhao; Xin Zeng"
-DATE: 2025-11-03
----
+# Unimod pausing analysis
 
-# Overview
+This repository contains the Snakemake workflow, metadata, and R scripts used to preprocess PRO-seq/PRO-cap data, fit pause-release models, run simulations, and reproduce the manuscript figures.
 
-The following sections describe the scripts used to generate figures for this study.
+## Repository layout
 
-## Computational simulations
-1. Script `lrt_matched_coverage.R`: 
-   Figure S1C&D
-   Figure S1E
+| Path | Purpose |
+| --- | --- |
+| `Snakefile` | Entry point that loads metadata/configuration, sets up helper functions, and includes the modular rule files. |
+| `rules/` | Snakemake rule collections for PRO-seq preprocessing (`proseq.smk`), unimodal pause-release modeling (`unimod.smk`), and simulation post-processing (`simulation.smk`). |
+| `scripts/` | R and bash helpers invoked by the rules (pipeline wrappers, statistical models, visualization scripts). |
+| `metadata/` | CSV tables describing experiments, spike-ins, parameter grids, and simulation settings that populate Snakemake wildcards. |
+| `config.yml` | Paths to references (genomes, annotations) and analysis parameters (window sizes, gene filters, etc.). |
+| `environment.yml` | Conda environment mixing Python tooling (Snakemake, numpy/pandas) with the R/Bioconductor stack and command-line genomics utilities. |
+| `ms/` | Manuscript notes such as `pausedRNAP_nucleosome_quotes.md`. |
+| `tmp/` | Temporary outputs written by intermediate rules. |
 
-## Experimental data validation
+## Pipeline overview
 
-Samples used in this section is recorded in "unimod_human/metadata/metadata_aoi.csv"
+The `Snakefile` orchestrates the complete analysis by:
 
-1. Script `analyze_two_samples_DLD1.R`:
-   Figure 1 B&C (P-TEFb inhibition by NVP2);
-   Figure 1 E&F (Auxin induced NELF depletion);
-   Figure S2 (P-TEFb inhibition by flavopiridol)
+1. Importing helper libraries and reading shared metadata tables up front so rules can reuse their columns as wildcards.
+2. Defining `rule all`, which enumerates the final deliverables: processed sequencing bigWigs, pause-release parameter estimates, likelihood-ratio test (LRT) tables, simulation summaries, and visualization files for the manuscript.
+3. Including three focused rule modules:
+   * **`rules/proseq.smk`** – indexes genomes, links GEO fastqs, runs the PRO-seq 2.0 bash pipeline, extracts 5′ ends, normalizes coverage, and writes strand-specific bigWigs.
+   * **`rules/unimod.smk`** – converts transcripts to counting regions, fits pause-release models per sample, compares two conditions, and generates figure-ready summaries.
+   * **`rules/simulation.smk`** – subsamples RDS simulation outputs, summarizes parameter sweeps, and creates LRT tables that match experimental coverage.
 
-## Visualization
-1. Script `visualize_two_samples.R`:
-   Figure 1G/H/I
+## Scripts directory
 
-## Additional figures are generated in Inkscape and IGV
+* `scripts/proseq/`: PRO-seq 2.0 wrapper plus helper R scripts for active TSS detection (`find_active_tss_DLD1.R`) and transcript processing.
+* `scripts/unimod/`: Core statistical routines, including `analyze_one_sample_poisson_pause_release.R`, `analyze_two_samples_DLD1.R`, expectation-maximization helpers, and `visualize_two_samples.R` for figure panels.
+* `scripts/simulation/`: Post-processing utilities for simulation RDS files, coverage matching, and generation of supplemental figure tables.
 
-1. Inkscape:
-   Figure 1 A&D
-   Figure S1A
-   
-   IGV:
-   Figure S1B
+## Metadata and configuration tips
 
+* Update `config.yml` with absolute paths to your reference genomes, chromosome sizes, annotation GTF, and analysis-specific filters before running Snakemake.
+* Inspect the CSV schemas in `metadata/` to understand how assays, groups, references, and spike-in scaling factors are encoded. These tables drive wildcard resolution everywhere in the workflow.
+* Create the conda environment via `conda env create -f environment.yml` (or `mamba env create ...`) so both Python and R dependencies match the expected versions.
 
+## Getting started
 
+1. **Dry-run the workflow:** after editing `config.yml`, run `snakemake -np` to inspect the dependency graph without executing heavy jobs.
+2. **Trace a rule end-to-end:** e.g., follow `rules/unimod.smk:analyze_one_sample_pause_release` into its corresponding R script to see how pause-release rates are estimated.
+3. **Review visualization scripts:** use `scripts/unimod/visualize_two_samples.R` to understand how figure panels (e.g., Figure 1G–I) are composed from the processed outputs.
+4. **Check manuscript mappings:** the original README sections documented which scripts generate each figure; keep those references handy when recreating panels in Inkscape or IGV.
 
+## Additional notes
+
+* Supplemental figures (e.g., Figure S1 panels) combine Snakemake outputs with manual layout steps in Inkscape and IGV.
+* Temporary outputs under `tmp/` can be safely removed between runs; Snakemake will regenerate them as needed.
