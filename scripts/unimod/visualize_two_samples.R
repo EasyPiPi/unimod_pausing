@@ -16,7 +16,7 @@ bwp2_p3_in <- snakemake@input[["bwp2_p3"]]
 bwm2_p3_in <- snakemake@input[["bwm2_p3"]]
 
 beta_in <- snakemake@input[["beta"]]
-omega_in <- snakemake@input[["omega"]]
+chi_in <- snakemake@input[["chi"]]
 
 result_dir <- snakemake@params[["result_dir"]]
 
@@ -60,7 +60,7 @@ options(ucscChromosomeNames = FALSE)
 #     paste0("NELFC_Auxin_Ctrl", "_vs_", "NELFC_Auxin")
 #   )
 
-# omega_in <- file.path(result_dir, "omega.csv")
+# chi_in <- file.path(result_dir, "chi.csv")
 # beta_in <- file.path(result_dir, "beta.csv")
 
 # #### end of parsing arguments ####
@@ -68,14 +68,14 @@ fig_dir <- file.path(result_dir, "gviz")
 
 walk(
   c(
-    result_dir, fig_dir, file.path(fig_dir, "omega"),
+    result_dir, fig_dir, file.path(fig_dir, "chi"),
     file.path(fig_dir, "beta", c("up", "down")),
     file.path(
       fig_dir, "combine",
       c(
-        "beta_up_omega_up", "beta_down_omega_down",
-        "beta_others_omega_up", "beta_others_omega_down",
-        "beta_down_omega_up", "select"
+        "beta_up_chi_up", "beta_down_chi_down",
+        "beta_others_chi_up", "beta_others_chi_down",
+        "beta_down_chi_up", "select"
       )
     )
   ),
@@ -84,13 +84,17 @@ walk(
 )
 # dir.create(result_dir, showWarnings = FALSE, recursive = TRUE)
 
+## set up parameters ##
+# plotting parameters
+theme_set(cowplot::theme_cowplot())
+paired_color <- RColorBrewer::brewer.pal(name = "Paired", n = 6)
+
 load(grng_in)
 gtf <- readRDS(gtf_in)
 
 # read in number of spike-in or total number of mappable reads
 # use them as scaling factor
 scale_tbl <- read_csv(spike_in, show_col_types = FALSE)
-# subset the right table
 scale_tbl <- scale_tbl[str_detect(bwp1_p3_in, scale_tbl$sample), ]
 
 scale_factor <-
@@ -156,8 +160,6 @@ beta_up <- beta_tbl %>%
 beta_down <- beta_tbl %>%
   filter(category == "Down") %>%
   pull(gene_id)
-
-paired_color <- RColorBrewer::brewer.pal(name = "Paired", n = 6)
 
 sm_pause <- ScoreMatrixList(
   target = GRangesList("Control" = bw_ctrl_bs, "Treated" = bw_trtd_bs),
@@ -285,21 +287,21 @@ if (length(beta_down) > 5) {
 save.image(file = file.path(result_dir, "data.RData"))
 
 # load(file.path(result_dir, "data.RData"))
-if (stringr::str_detect(omega_in, "chivu")) quit(save = "no", status = 0, runLast = FALSE)
+if (stringr::str_detect(chi_in, "chivu")) quit(save = "no", status = 0, runLast = FALSE)
 
 zeta <- 2000
 
 theme_set(cowplot::theme_cowplot())
 
 # visualize some interesting tf targets
-omega_tbl <- read_csv(omega_in, show_col_types = FALSE)
+chi_tbl <- read_csv(chi_in, show_col_types = FALSE)
 # plot genes with changes
 beta_down <- beta_tbl %>%
-  arrange(padj) %>%
+  arrange(padj_beta) %>%
   filter(category == "Down") %>%
   pull(gene_id)
 beta_up <- beta_tbl %>%
-  arrange(padj) %>%
+  arrange(padj_beta) %>%
   filter(category == "Up") %>%
   pull(gene_id)
 
@@ -411,68 +413,73 @@ for (gene_sel in beta_down[1:10]) {
 
 # plots for gene may be driven by initiation or pause-escape
 rate_tbl <- beta_tbl %>%
-  select(gene_id, beta1, beta2, category, t_stats, lfc, padj) %>%
-  left_join(omega_tbl %>% select(gene_id, chi1, chi2, category, t_stats, lfc, padj),
-    by = "gene_id", suffix = c("_beta", "_omega")
+  select(gene_id, beta1, beta2, category, t_stats_beta, lfc, padj_beta) %>%
+  left_join(chi_tbl %>%
+    select(gene_id, chi1, chi2, category, t_stats, lfc, padj) %>%
+    dplyr::rename(
+      t_stats_chi = t_stats,
+      padj_chi = padj
+    ),
+  by = "gene_id", suffix = c("_beta", "_chi")
   )
 
-beta_up_omega_up <- rate_tbl %>%
-  filter(category_beta == "Up", category_omega == "Up") %>%
-  arrange(desc(t_stats_omega)) %>%
+beta_up_chi_up <- rate_tbl %>%
+  filter(category_beta == "Up", category_chi == "Up") %>%
+  arrange(desc(t_stats_chi)) %>%
   slice_head(n = 20) %>%
   pull(gene_id)
 
-if (length(beta_up_omega_up) > 0) {
-  for (gene_sel in beta_up_omega_up) {
-    gviz_plot(gene_sel, 5000, "beta_up_omega_up", dir = "combine")
+if (length(beta_up_chi_up) > 0) {
+  for (gene_sel in beta_up_chi_up) {
+    gviz_plot(gene_sel, 5000, "beta_up_chi_up", dir = "combine")
   }
 }
 
-beta_down_omega_down <- rate_tbl %>%
-  filter(category_beta == "Down", category_omega == "Down") %>%
-  arrange(desc(t_stats_omega)) %>%
+beta_down_chi_down <- rate_tbl %>%
+  filter(category_beta == "Down", category_chi == "Down") %>%
+  arrange(desc(t_stats_chi)) %>%
   slice_head(n = 20) %>%
   pull(gene_id)
 
-if (length(beta_down_omega_down) > 0) {
-  for (gene_sel in beta_down_omega_down) {
-    gviz_plot(gene_sel, 5000, "beta_down_omega_down", dir = "combine")
+if (length(beta_down_chi_down) > 0) {
+  for (gene_sel in beta_down_chi_down) {
+    gviz_plot(gene_sel, 5000, "beta_down_chi_down", dir = "combine")
   }
 }
 
-beta_others_omega_up <- rate_tbl %>%
-  filter(category_beta == "Others", category_omega == "Up") %>%
-  arrange(desc(t_stats_omega)) %>%
+beta_others_chi_up <- rate_tbl %>%
+  filter(category_beta == "Others", category_chi == "Up") %>%
+  arrange(desc(t_stats_chi)) %>%
   slice_head(n = 20) %>%
   pull(gene_id)
 
-if (length(beta_others_omega_up) > 0) {
-  for (gene_sel in beta_others_omega_up) {
-    gviz_plot(gene_sel, 5000, "beta_others_omega_up", dir = "combine")
+if (length(beta_others_chi_up) > 0) {
+  for (gene_sel in beta_others_chi_up) {
+    gviz_plot(gene_sel, 5000, "beta_others_chi_up", dir = "combine")
   }
 }
 
-beta_others_omega_down <- rate_tbl %>%
-  filter(category_beta == "Others", category_omega == "Down") %>%
-  arrange(desc(t_stats_omega)) %>%
+beta_others_chi_down <- rate_tbl %>%
+  filter(category_beta == "Others", category_chi == "Down") %>%
+  arrange(desc(t_stats_chi)) %>%
   slice_head(n = 20) %>%
   pull(gene_id)
 
-if (length(beta_others_omega_down) > 0) {
-  for (gene_sel in beta_others_omega_down) {
-    gviz_plot(gene_sel, 5000, "beta_others_omega_down", dir = "combine")
+if (length(beta_others_chi_down) > 0) {
+  for (gene_sel in beta_others_chi_down) {
+    gviz_plot(gene_sel, 5000, "beta_others_chi_down", dir = "combine")
   }
 }
 
-beta_down_omega_up <- rate_tbl %>%
-  filter(category_beta == "Down", category_omega == "Up") %>%
-  arrange(desc(t_stats_omega)) %>%
+beta_down_chi_up <- rate_tbl %>%
+  filter(category_beta == "Down", category_chi == "Up") %>%
+  arrange(desc(t_stats_chi)) %>%
   slice_head(n = 20) %>%
   pull(gene_id)
 
-if (length(beta_down_omega_up) > 0) {
-  for (gene_sel in beta_down_omega_up) {
-    gviz_plot(gene_sel, 5000, "beta_down_omega_up", dir = "combine")
+if (length(beta_down_chi_up) > 0) {
+  for (gene_sel in beta_down_chi_up) {
+    gviz_plot(gene_sel, 5000, "beta_down_chi_up", dir = "combine")
   }
 }
 
@@ -491,10 +498,8 @@ for (gene_sel in sel_genes) {
 
 # lfc scatter plot
 rate_tbl %>%
-  count(category_beta, category_omega) %>%
-  pivot_wider(id_cols = category_omega, names_from = category_beta, values_from = n)
-
-theme_set(cowplot::theme_cowplot())
+  count(category_beta, category_chi) %>%
+  pivot_wider(id_cols = category_chi, names_from = category_beta, values_from = n)
 
 sel_symbol <-
   AnnotationDbi::select(org.Hs.eg.db,
@@ -506,17 +511,17 @@ gene_tbl <- rate_tbl %>%
   filter(gene_id %in% sel_genes) %>%
   left_join(sel_symbol, by = c("gene_id" = "ENSEMBL"))
 
-gene_tbl %>% select(SYMBOL, lfc_omega, padj_omega, lfc_beta, padj_beta)
+gene_tbl %>% select(SYMBOL, lfc_chi, padj_chi, lfc_beta, padj_beta)
 
 p <- rate_tbl %>%
-  ggplot(aes(x = lfc_omega, y = lfc_beta)) +
+  ggplot(aes(x = lfc_chi, y = lfc_beta)) +
   geom_pointdensity() +
   scale_color_viridis() +
   geom_hline(yintercept = 0, color = "gray", linetype = "dashed") +
   geom_vline(xintercept = 0, color = "gray", linetype = "dashed") +
   # geom_abline(slope = 1) +
   stat_cor() +
-  geom_point(data = gene_tbl, aes(x = lfc_omega, y = lfc_beta), color = "red") +
+  geom_point(data = gene_tbl, aes(x = lfc_chi, y = lfc_beta), color = "red") +
   # geom_text(data = gene_tbl, aes(label=SYMBOL), size=3) +
   ggrepel::geom_text_repel(
     data = gene_tbl, aes(label = SYMBOL),
@@ -529,7 +534,7 @@ p <- rate_tbl %>%
   ylim(-6, 6) +
   xlim(-5, 7)
 
-ggsave(file.path(result_dir, "lfc_alpha_vs_beta_density.png"),
+ggsave(file.path(result_dir, "lfc_chi_vs_beta_density.png"),
   plot = p,
   width = 7, height = 5
 )

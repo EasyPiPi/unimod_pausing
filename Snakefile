@@ -56,7 +56,7 @@ rule all:
         ## Rate estimates ##
         expand(os.path.join("outputs/within_sample", expand_combine_wildcard, "pause_release", "rate.RDS"), df = metadata_aoi.itertuples()),
         ## LRT ##
-        expand(os.path.join("outputs/between_samples", "{df.group_1}" + "_vs_" + "{df.group_2}", "omega.csv"), df = metadata_comparison.itertuples()),
+        expand(os.path.join("outputs/between_samples", "{df.group_1}" + "_vs_" + "{df.group_2}", "beta.csv"), df = metadata_comparison.itertuples()),
         expand(os.path.join("indicator/visualize_two_samples", "{df.group_1}" + "_vs_" + "{df.group_2}" + ".done"), df = metadata_comparison.itertuples()),
         #### Simulation ####
         ## LRT ##

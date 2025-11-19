@@ -2,7 +2,6 @@
 # two conditions, e.g., comparisons between treatments, cell types, or species
 # functions for EM based on Gaussian distributed k, and beta is tied in two conditions
 get_expectation <- function(fk, Xk, beta) {
-
   Yk <- Xk / (1 - beta + beta / fk)
 
   return(Yk)
@@ -11,14 +10,14 @@ get_expectation <- function(fk, Xk, beta) {
 get_fk <- function(Xk, Yk, fk, kmin, kmax) {
   t <- sum(Yk)
   u <- sum(Yk * seq(kmin, kmax))
-  v <- sum(Yk * seq(kmin, kmax) ^ 2)
+  v <- sum(Yk * seq(kmin, kmax)^2)
 
-  w <- sum(fk / (1- fk) * (Xk - Yk), na.rm = TRUE)
-  z <- sum(fk / (1- fk) * (Xk - Yk) *  seq(kmin, kmax), na.rm = TRUE)
-  r <- sum(fk / (1- fk) * (Xk - Yk) *  seq(kmin, kmax) ^ 2, na.rm = TRUE)
+  w <- sum(fk / (1 - fk) * (Xk - Yk), na.rm = TRUE)
+  z <- sum(fk / (1 - fk) * (Xk - Yk) * seq(kmin, kmax), na.rm = TRUE)
+  r <- sum(fk / (1 - fk) * (Xk - Yk) * seq(kmin, kmax)^2, na.rm = TRUE)
 
   fk_mean <- (u - z) / (t - w)
-  fk_var <- (v - r) / (t - w) - fk_mean ^ 2
+  fk_var <- (v - r) / (t - w) - fk_mean^2
 
   # avoid negative values
   if (fk_var < 1e-10) {
@@ -28,14 +27,13 @@ get_fk <- function(Xk, Yk, fk, kmin, kmax) {
     return(list("t" = t, "fk" = fk))
   }
 
-  fk <- dnorm(kmin:kmax, mean = fk_mean, sd = fk_var ^ 0.5)
+  fk <- dnorm(kmin:kmax, mean = fk_mean, sd = fk_var^0.5)
   fk <- fk / sum(fk)
 
-  return(list("t" = t, "fk" = fk, 'fk_mean' = fk_mean, 'fk_var' = fk_var))
+  return(list("t" = t, "fk" = fk, "fk_mean" = fk_mean, "fk_var" = fk_var))
 }
 
 get_maximization_h0 <- function(chi_hat, Xk1, Xk2, Yk1, Yk2, fk1, fk2, kmin, kmax, scale_factor) {
-
   fk1_ls <- get_fk(Xk1, Yk1, fk1, kmin, kmax)
   fk2_ls <- get_fk(Xk2, Yk2, fk2, kmin, kmax)
 
@@ -60,7 +58,7 @@ get_likelihood <- function(beta, chi, Xk, Yk, fk) {
 
 # EM function to estimate parameters when assuming beta is the same between conditions
 main_EM_h0 <- function(fk_int, Xk1, Xk2, kmin, kmax, beta_int,
-                       chi_hat, chi_hat1, chi_hat2,scale_factor,
+                       chi_hat, chi_hat1, chi_hat2, scale_factor,
                        max_itr = 100, tor = 1e-3) {
 
   # lists to record changes of likelihood and betas in iterations
@@ -74,14 +72,18 @@ main_EM_h0 <- function(fk_int, Xk1, Xk2, kmin, kmax, beta_int,
     if (i == 1) {
       Yk1 <- get_expectation(fk_int, Xk1, beta_int)
       Yk2 <- get_expectation(fk_int, Xk2, beta_int)
-      hats <- get_maximization_h0(chi_hat, Xk1, Xk2, Yk1, Yk2,
-                                  fk_int, fk_int, kmin, kmax, scale_factor)
+      hats <- get_maximization_h0(
+        chi_hat, Xk1, Xk2, Yk1, Yk2,
+        fk_int, fk_int, kmin, kmax, scale_factor
+      )
     }
     if (i != 1) {
       Yk1 <- get_expectation(hats$fk1, Xk1, hats$beta)
       Yk2 <- get_expectation(hats$fk2, Xk2, hats$beta)
-      hats <- get_maximization_h0(chi_hat, Xk1, Xk2, Yk1, Yk2,
-                                  hats$fk1, hats$fk2, kmin, kmax, scale_factor)
+      hats <- get_maximization_h0(
+        chi_hat, Xk1, Xk2, Yk1, Yk2,
+        hats$fk1, hats$fk2, kmin, kmax, scale_factor
+      )
     }
 
     likelihoods[[i]] <-
@@ -95,19 +97,22 @@ main_EM_h0 <- function(fk_int, Xk1, Xk2, kmin, kmax, beta_int,
     if (any(hats$fk1 == 1) & any(hats$fk2 == 1)) {
       hats$beta <- chi_hat / (Xk1[which(hats$fk1 == 1)] + Xk2[which(hats$fk2 == 1)])
       flag <- "single_site"
-      break}
+      break
+    }
 
     if (i > 1) {
-      diff <- likelihoods[[i]] - likelihoods[[i-1]]
+      diff <- likelihoods[[i]] - likelihoods[[i - 1]]
       if (diff <= tor) break
     }
   }
 
   if (i == max_itr) flag <- "max_iteration"
 
-  return(list("beta" = hats$beta, "Yk1" = Yk1, "Yk2" = Yk2,
-              "fk1" = hats$fk1, "fk2" = hats$fk2, "betas" = betas,
-              "likelihoods" = likelihoods, "yks" = yks, "flag" = flag))
+  return(list(
+    "beta" = hats$beta, "Yk1" = Yk1, "Yk2" = Yk2,
+    "fk1" = hats$fk1, "fk2" = hats$fk2, "betas" = betas,
+    "likelihoods" = likelihoods, "yks" = yks, "flag" = flag
+  ))
 }
 
 #### Functions for LRTs ####
@@ -137,53 +142,9 @@ omega_lrt <- function(s1, s2, tao1, tao2) {
 
 
 ## adjust for doing LRT in fk
-main_EM_fk_h0_orig <- function(fk_init, Xk1, Xk2, kmin, kmax, beta_int1,beta_int2, 
-                              chi_hat, chi_hat1, chi_hat2,
-                              max_itr = 200, tor = 1e-3) {
-
-  likelihoods <- list()
-  flag <- "normal"
-
-  for (i in 1:max_itr) {
-    if (i == 1) {
-      Yk1 <- get_expectation(fk_init, Xk1, beta_int1)
-      Yk2 <- get_expectation(fk_init, Xk2, beta_int2)
-      fk_ls <- get_fk(Xk1 + Xk2, Yk1 + Yk2, fk_init, kmin, kmax)
-    } else {
-      Yk1 <- get_expectation(fk, Xk1, beta1)
-      Yk2 <- get_expectation(fk, Xk2, beta2)
-      fk_ls <- get_fk(Xk1 + Xk2, Yk1 + Yk2, fk, kmin, kmax)
-    }
-
-    fk <- fk_ls$fk
-    t_total <- fk_ls$t
-
-    beta1 <- chi_hat1 / sum(Yk1)
-    beta2 <- chi_hat2 / sum(Yk2)
-
-    if (any(fk == 1)){
-      beta1 <- chi_hat1 / (Xk1[which(fk == 1)])
-      beta2 <- chi_hat2 / (Xk2[which(fk == 1)])
-      flag <- 'single_site'
-      fk_ls$fk_mean <- which(fk == 1)
-      fk_ls$fk_var <- 0
-    }
-    l1 <- get_likelihood(beta1, chi_hat1, Xk1, Yk1, fk)
-    l2 <- get_likelihood(beta2, chi_hat2, Xk2, Yk2, fk)
-
-    likelihoods[[i]] <- l1 + l2
-    if (i > 1 && abs(likelihoods[[i]] - likelihoods[[i-1]]) < tor) break
-  }
-  
-  if (i == max_itr) flag <- "max_iteration"
-  return(list(beta1 = beta1, beta2 = beta2, fk = fk, fk_mean=fk_ls$fk_mean, fk_var=fk_ls$fk_var, likelihoods=likelihoods,
-              "flag" = flag))
-}
-
-main_EM_fk_h0 <- function(fk_init, Xk1, Xk2, kmin, kmax, beta_int1,beta_int2, 
-                              chi_hat, chi_hat1, chi_hat2, scale_factor,
-                              max_itr = 200, tor = 1e-3) {
-
+main_EM_fk_h0 <- function(fk_init, Xk1, Xk2, kmin, kmax, beta_int1, beta_int2,
+                          chi_hat, chi_hat1, chi_hat2, scale_factor,
+                          max_itr = 200, tor = 1e-3) {
   likelihoods <- list()
   flag <- "normal"
 
@@ -204,10 +165,10 @@ main_EM_fk_h0 <- function(fk_init, Xk1, Xk2, kmin, kmax, beta_int1,beta_int2,
     beta1 <- chi_hat1 / sum(Yk1)
     beta2 <- chi_hat2 / sum(Yk2)
 
-    if (any(fk == 1)){
+    if (any(fk == 1)) {
       beta1 <- chi_hat1 / (Xk1[which(fk == 1)])
       beta2 <- chi_hat2 / (Xk2[which(fk == 1)])
-      flag <- 'single_site'
+      flag <- "single_site"
       fk_ls$fk_mean <- which(fk == 1)
       fk_ls$fk_var <- 0
     }
@@ -215,13 +176,12 @@ main_EM_fk_h0 <- function(fk_init, Xk1, Xk2, kmin, kmax, beta_int1,beta_int2,
     l2 <- get_likelihood(beta2, chi_hat2, Xk2, Yk2, fk)
 
     likelihoods[[i]] <- l1 + l2 * scale_factor
-    if (i > 1 && abs(likelihoods[[i]] - likelihoods[[i-1]]) < tor) break
+    if (i > 1 && abs(likelihoods[[i]] - likelihoods[[i - 1]]) < tor) break
   }
-  
+
   if (i == max_itr) flag <- "max_iteration"
-  return(list(beta1 = beta1, beta2 = beta2, fk = fk, fk_mean=fk_ls$fk_mean, fk_var=fk_ls$fk_var, likelihoods=likelihoods,
-              "flag" = flag))
+  return(list(
+    beta1 = beta1, beta2 = beta2, fk = fk, fk_mean = fk_ls$fk_mean, fk_var = fk_ls$fk_var, likelihoods = likelihoods,
+    "flag" = flag
+  ))
 }
-
-
-
