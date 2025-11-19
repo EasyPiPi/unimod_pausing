@@ -27,12 +27,6 @@ metadata_procap = pd.read_csv("metadata/copro_sample.csv", dtype=str)
 metadata_comparison = pd.read_csv("metadata/metadata_comparison.csv", dtype=str)
 
 ## Simulated data ##
-# simulation parameters for pause release
-metadata_pr_params = pd.read_csv("metadata/simulation_params_pause_release.csv", dtype=str)
-# simulation parameters for steric hindrance
-metadata_st_params = pd.read_csv("metadata/simulation_params_steric_hindrance.csv", dtype=str)
-# combine simulations from steric hindrance for pause release
-metadata_pr_params = pd.concat([metadata_pr_params, metadata_st_params[(metadata_st_params["k_range"] == "50") & (metadata_st_params["add_space_range"] == "17")]], axis = 0, ignore_index=True)
 # simulations for LRT
 metadata_lrt_params = pd.read_csv("metadata/simulation_params_lrt.csv", dtype=str)
 
