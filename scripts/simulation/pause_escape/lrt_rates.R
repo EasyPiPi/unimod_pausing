@@ -3,20 +3,25 @@ log <- file(snakemake@log[[1]], open = "wt")
 sink(file = log, type = "output")
 sink(file = log, type = "message")
 
+#### snakemake files ####
+helper_in <- snakemake@params[["helper"]]
+table_dir <- snakemake@params[["table_dir"]]
+figure_dir <- snakemake@params[["figure_dir"]]
+
 #### load packages ####
 library(GenomicRanges)
 library(tidyverse)
 
-#### snakemake files ####
-
 #### testing files ####
 root_dir <- "~/Desktop/github/unimod_pausing"
 
-table_dir <- file.path(root_dir, "outputs/simulation/tables/lrt_matched_cov")
-figure_dir <- file.path(root_dir, "outputs/simulation/figures/lrt_matched_cov")
+# table_dir <- file.path(root_dir, "outputs/simulation/tables/lrt_pause_escape")
+# figure_dir <- file.path(root_dir, "outputs/simulation/figures/lrt_pause_escape")
 
+# helper_in <- file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
+
+#### end of parsing arguments ####
 meta_in <- file.path(root_dir, "metadata/simulation_params_lrt.csv")
-helper_in <- file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
 
 suffix <- "_subsample_cells"
 
@@ -25,7 +30,6 @@ kmin <- 1
 kmax <- 200
 matched_gb_len <- 2e4 - kmax
 
-#### end of parsing arguments ####
 walk(c(table_dir, figure_dir), dir.create, showWarnings = FALSE, recursive = TRUE)
 
 source(helper_in)
@@ -33,7 +37,6 @@ source(helper_in)
 # read in and clean up rate tibbles using meta dataframe
 rate_tbls <- read_csv(meta_in, show_col_types = FALSE)
 
-# colnames(rate_tbls) <-  c("id", "k", "ksd", "m", "a", "b", "g", "z", "t", "n", "s", "h", "l")
 colnames(rate_tbls) <- c("id", "k", "ksd", "a", "b", "z", "t", "n", "s", "h", "l")
 
 read_density <- c("lrt_high", "lrt_median", "lrt_low")

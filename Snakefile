@@ -54,8 +54,8 @@ rule all:
         expand(os.path.join("indicator/visualize_two_samples", "{df.group_1}" + "_vs_" + "{df.group_2}" + ".done"), df = metadata_comparison.itertuples()),
         #### Simulation ####
         ## LRT ##
-        expand(os.path.join("outputs/simulation/tables/lrt_matched_cov", "{param_id}_{lambda_exp}.RDS"), param_id = metadata_lrt_params.param_id, lambda_exp = ["lrt_high", "lrt_median", "lrt_low"]),
-
+        os.path.join("indicator/simulation/lrt_visualization", "pause_escape.done"),
+        os.path.join("indicator/simulation/lrt_visualization", "pause_distribution.done")
 
 ##### load rules #####
 include: "rules/proseq.smk"

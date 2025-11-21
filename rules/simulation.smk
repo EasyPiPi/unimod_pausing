@@ -1,7 +1,7 @@
 #### generate simulated data ####
 # Simulated data are generated using SimPol 
 
-#### summarize results ####
+#### subsample read counts ####
 rule subsample_simulation_for_lrts_with_matched_coverage:
     input:
         rds = os.path.join("outputs/simulation/data_lrt", "{param_id}_pos.RDS")
@@ -17,9 +17,38 @@ rule subsample_simulation_for_lrts_with_matched_coverage:
     wildcard_constraints:
        param_id="[^_]+"
     log:
-        os.path.join("logs/simulation/lrt_matched_cov", "{param_id}_{lambda_exp}.log")
+        os.path.join("logs/simulation/lrt_pause_escape", "{param_id}_{lambda_exp}.log")
     output:
-        rate_tbl = os.path.join("outputs/simulation/tables/lrt_matched_cov", "{param_id}_{lambda_exp}.RDS"),
-        rnap_tbl = os.path.join("outputs/simulation/tables/lrt_matched_cov", "{param_id}_{lambda_exp}.csv")
+        rate_tbl = os.path.join("outputs/simulation/tables/lrt_pause_escape", "{param_id}_{lambda_exp}.RDS"),
+        rnap_tbl = os.path.join("outputs/simulation/tables/lrt_pause_escape", "{param_id}_{lambda_exp}.csv")
     script:
-        "../scripts/simulation/subsample_simulation_pause_release.R"
+        "../scripts/simulation/pause_escape/subsample_simulation_pause_release.R"
+
+#### visualize results ####
+rule lrt_pause_escape:
+    input:
+        expand(os.path.join("outputs/simulation/tables/lrt_pause_escape", "{param_id}_{lambda_exp}.RDS"), param_id = metadata_lrt_params.param_id, lambda_exp = ["lrt_high", "lrt_median", "lrt_low"])
+    params:
+        helper = "scripts/unimod/helper_function_em_two_condition.R",
+        table_dir = "outputs/simulation/tables/lrt_pause_escape",
+        figure_dir = "outputs/simulation/figures/lrt_pause_escape"
+    threads:1
+    log:
+        os.path.join("logs/simulation/lrt_visualization", "pause_escape.log")
+    output:
+        done = touch(os.path.join("indicator/simulation/lrt_visualization", "pause_escape.done"))
+    script:
+        "../scripts/simulation/pause_escape/lrt_rates.R"
+
+rule lrt_pause_distribution:
+    params:
+        helper = "scripts/unimod/helper_function_em_two_condition.R",
+        table_dir = "outputs/simulation/data_fk/subsampling/high",
+        figure_dir = "outputs/simulation/figures/lrt_pause_distribution"
+    threads:1
+    log:
+        os.path.join("logs/simulation/lrt_visualization", "pause_distribution.log")
+    output:
+        done = touch(os.path.join("indicator/simulation/lrt_visualization", "pause_distribution.done"))
+    script:
+        "../scripts/simulation/pause_distribution/lrt_fk.R"

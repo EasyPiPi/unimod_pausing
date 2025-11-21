@@ -1,22 +1,32 @@
+#### log file ####
+log <- file(snakemake@log[[1]], open = "wt")
+sink(file = log, type = "output")
+sink(file = log, type = "message")
+
+#### snakemake files ####
+helper_in <- snakemake@params[["helper"]]
+table_dir <- snakemake@params[["table_dir"]]
+figure_dir <- snakemake@params[["figure_dir"]]
+
 #### load packages ####
 library(GenomicRanges)
 library(tidyverse)
-#### snakemake files ####
 
 #### testing files ####
-load(file = file.path(figure_dir, "fk_lrt.RData"))
+# root_dir <- "~/Desktop/github/unimod_pausing"
 
-root_dir <- "~/Desktop/github/unimod_pausing"
+# table_dir <-
+#   file.path(root_dir, "outputs/simulation/data_fk/subsampling/high")
+# figure_dir <-
+#   file.path(root_dir, "outputs/simulation/figures/lrt_fk")
 
-table_dir <-
-  file.path(root_dir, "outputs/simulation/data_fk/subsampling/high")
-figure_dir <-
-  file.path(root_dir, "outputs/simulation/figures/lrt_fk")
+# helper_in <-
+#   file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
+#### end of parsing arguments ####
 
 dir.create(figure_dir, showWarnings = FALSE, recursive = TRUE)
 
-helper_in <-
-  file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
+# load(file = file.path(figure_dir, "fk_lrt.RData"))
 
 compute_in_range_proportion <- function(mean, sd, lower = 0, upper = 200) {
   p_upper <- pnorm((upper - mean) / sd)

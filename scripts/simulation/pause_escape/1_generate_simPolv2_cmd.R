@@ -27,4 +27,4 @@ meta <- meta %>%
     "-d", paste0("./", param_id)
   ))
 
-write(meta$cmd, file.path(root_dir, "scripts/simulation", "simulation_rate_lrt_simPolv2.sh"))
+write(meta$cmd, file.path(root_dir, "scripts/simulation/pause_escape", "simulation_rate_lrt.sh"))
