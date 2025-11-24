@@ -7,18 +7,19 @@ sink(file = log, type = "message")
 helper_in <- snakemake@params[["helper"]]
 table_dir <- snakemake@params[["table_dir"]]
 figure_dir <- snakemake@params[["figure_dir"]]
+lambda <- snakemake@params[["lambda_exp"]]
 
 #### load packages ####
 library(GenomicRanges)
 library(tidyverse)
 
-#### testing files ####
+# #### testing files ####
 # root_dir <- "~/Desktop/github/unimod_pausing"
 
 # table_dir <-
-#   file.path(root_dir, "outputs/simulation/data_fk/subsampling/high")
+#   file.path(root_dir, "outputs/simulation/tables/lrt_pause_distribution")
 # figure_dir <-
-#   file.path(root_dir, "outputs/simulation/figures/lrt_fk")
+#   file.path(root_dir, "outputs/simulation/figures/lrt_pause_distribution")
 
 # helper_in <-
 #   file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
@@ -44,6 +45,8 @@ matched_gb_len <- 2e4 - kmax
 source(helper_in)
 
 file_names <- list.files(table_dir)
+# only use high coverage setting for LRT
+file_names <- str_subset(file_names, paste0(lambda, ".RDS"))
 
 rate_tbls <- data.frame(
   id = file_names,

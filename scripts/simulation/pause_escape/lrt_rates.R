@@ -18,12 +18,24 @@ root_dir <- "~/Desktop/github/unimod_pausing"
 # table_dir <- file.path(root_dir, "outputs/simulation/tables/lrt_pause_escape")
 # figure_dir <- file.path(root_dir, "outputs/simulation/figures/lrt_pause_escape")
 
-# helper_in <- file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
+# helper_in <-
+#   file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
 
 #### end of parsing arguments ####
 meta_in <- file.path(root_dir, "metadata/simulation_params_lrt.csv")
-
 suffix <- "_subsample_cells"
+
+## Set theme for ggplot2 ##
+theme_set(cowplot::theme_cowplot())
+scatter_colors <- c("#6e8fb2", "gray", "#c16e71")
+paired_colors <- c(
+  "#EAB67A", "#F5D8B7",
+  "#7DA494", "#B6C9C0",
+  "#58539f", "#bbbbd6",
+  "#d86967", "#eebabb"
+)
+gradient_colors <- c("#403990", "#80A6E2", "#FBDD85", "#F46F43", "#CF3D3E")
+bar_colors <- c("#00AFBB", "#E7B800", "#FC4E07")
 
 # min and max position of pause site
 kmin <- 1
@@ -134,7 +146,7 @@ get_beta_lrt_results <- function(ctrl_tbl, test_tbl) {
     function(x, y, z, k, m, n) {
       tryCatch(main_EM_h0(fk_int,
         Xk1 = x, Xk2 = y, kmin, kmax, beta_int = z,
-        chi_hat = k, chi_hat1 = m, chi_hat2 = n,
+        chi_hat = k, chi_hat1 = m, chi_hat2 = n, scale_factor = 1,
         max_itr, tor
       ),
       error = function(err) {
@@ -283,14 +295,12 @@ prep_plot_tbl <- function(rc_tbl_gb, lrt_col, gb_col) {
   return(plot_tbl)
 }
 
-theme_set(cowplot::theme_cowplot())
-
-# power curves
+## power curves ##
 p <- rc_tbl_gb %>%
   prep_plot_tbl(lrt_a_fix_b, a) %>%
   ggplot(aes(x = a, y = sig, group = interaction(r, read_density))) +
-  # geom_line(aes(color = read_density, linetype = r)) +
   geom_line(aes(color = read_density)) +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   labs(
     y = "Statistical Power", x = expression("True " * alpha * zeta),
     color = "Exp. Level", linetype = "Category",
@@ -306,8 +316,8 @@ ggsave(file.path(figure_dir, paste0("lrt_omega_fix_beta", suffix, ".png")),
 p <- rc_tbl_gb %>%
   prep_plot_tbl(lrt_a_fix_a, b) %>%
   ggplot(aes(x = b, y = sig, group = interaction(r, read_density))) +
-  # geom_line(aes(color = read_density, linetype = r)) +
   geom_line(aes(color = read_density)) +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   labs(
     y = "Statistical Power", x = expression("True " * beta * zeta),
     color = "Exp. Level", linetype = "Category",
@@ -326,14 +336,12 @@ pause_lrt_tbl <-
 
 p <- pause_lrt_tbl %>%
   ggplot(aes(x = b, y = sig, group = interaction(r, read_density))) +
-  # geom_line(aes(color = read_density, linetype = r)) +
   geom_line(aes(color = read_density)) +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   labs(
     y = "Statistical Power", x = expression("True " * beta * zeta),
-    color = "Exp. Level", linetype = "Category",
-    title = expression("LRT on " * beta)
-  ) +
-  theme(plot.title = element_text(hjust = 0.5))
+    color = "Exp. Level", linetype = "Category"
+  )
 
 ggsave(file.path(figure_dir, paste0("lrt_beta_fix_alpha", suffix, ".png")),
   plot = p,
@@ -347,8 +355,8 @@ chi_tbl <-
 
 p <- chi_tbl %>%
   ggplot(aes(x = b, y = sig, group = interaction(r, read_density))) +
-  # geom_line(aes(color = read_density, linetype = r)) +
   geom_line(aes(color = read_density)) +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   labs(
     y = "Statistical Power", x = expression("True " * beta * zeta),
     color = "Exp. Level", linetype = "Category",
@@ -379,10 +387,11 @@ test_cpr_w <- test_cpr %>%
   )
 
 p <- test_cpr %>%
-  filter(b != 1) %>%
+  filter(b %in% c(0.8, 1.2)) %>%
   ggplot(aes(x = b, y = sig, fill = method)) +
   geom_col(position = position_dodge(width = 0.8), width = 0.7) +
-  facet_wrap(~read_density, nrow = 3) +
+  scale_fill_manual(values = bar_colors) +
+  facet_wrap(~read_density, nrow = 1) +
   labs(
     x = expression("True " * beta * zeta),
     y = "Statistical Power"
@@ -390,13 +399,14 @@ p <- test_cpr %>%
 
 ggsave(file.path(figure_dir, paste0("test_comparison", suffix, ".png")),
   plot = p,
-  width = 8, height = 8
+  width = 8, height = 4
 )
 
 p <- test_cpr %>%
   filter(b != 1) %>%
   ggplot(aes(x = b, y = sig, fill = method)) +
   geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  scale_fill_manual(values = bar_colors) +
   geom_text(
     aes(label = sig),
     position = position_dodge(width = 0.8),
@@ -419,7 +429,7 @@ p <- rc_tbl_gb %>%
   prep_plot_tbl(lrt_b_fix_a, b) %>%
   filter(!b %in% c(0.1, 10)) %>%
   ggplot(aes(x = b, y = sig, group = interaction(r, read_density))) +
-  # geom_line(aes(color = read_density, linetype = r)) +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   geom_line(aes(color = read_density)) +
   labs(
     y = "Statistical Power", x = expression("True " * beta * zeta),
@@ -438,8 +448,8 @@ ggsave(file.path(figure_dir, paste0("lrt_beta_fix_alpha", suffix, "_grant.png"))
 p <- rc_tbl_gb %>%
   prep_plot_tbl(lrt_b_fix_b, a) %>%
   ggplot(aes(x = a, y = sig, group = interaction(r, read_density))) +
-  # geom_line(aes(color = read_density, linetype = r)) +
   geom_line(aes(color = read_density)) +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   labs(
     y = "False Positive Rate", x = expression("True " * alpha * zeta),
     color = "Exp. Level", linetype = "Category",
@@ -464,6 +474,7 @@ p <- rc_tbl %>%
   filter(b == 1) %>%
   ggplot() +
   geom_boxplot(aes(x = a, y = chi, color = read_density)) +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   geom_hline(aes(yintercept = y, color = read_density),
     data = y_int,
     linetype = "dashed"
@@ -481,8 +492,8 @@ p <- rc_tbl_gb %>%
   unnest(lrt_a_fix_b) %>%
   ggplot(aes(x = a, y = t_stats, color = read_density)) +
   geom_boxplot() +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   labs(y = "T statistic", x = expression("True " * alpha * zeta), color = "Exp. Level") +
-  # facet_grid(r ~ .) +
   cowplot::theme_cowplot()
 
 ggsave(file.path(figure_dir, paste0("lrt_omega_fix_beta_t_stats", suffix, ".png")),
@@ -495,8 +506,8 @@ p <- rc_tbl_gb %>%
   unnest(lrt_a_fix_a) %>%
   ggplot(aes(x = b, y = t_stats, color = read_density)) +
   geom_boxplot() +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   labs(y = "T statistic", x = expression("True " * beta * zeta), color = "Exp. Level") +
-  # facet_grid(r ~ .) +
   cowplot::theme_cowplot()
 
 ggsave(file.path(figure_dir, paste0("lrt_omega_fix_alpha_t_stats", suffix, ".png")),
@@ -510,8 +521,8 @@ p <- rc_tbl_gb %>%
   mutate(t_stats = ifelse(t_stats < 0, 0, t_stats)) %>%
   ggplot(aes(x = b, y = t_stats, color = read_density)) +
   geom_boxplot() +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   labs(y = "T statistic", x = expression("True " * beta * zeta), color = "Exp. Level") +
-  # facet_grid(r ~ .) +
   cowplot::theme_cowplot()
 
 ggsave(file.path(figure_dir, paste0("lrt_beta_fix_alpha_t_stats", suffix, ".png")),
@@ -525,8 +536,8 @@ p <- rc_tbl_gb %>%
   mutate(t_stats = ifelse(t_stats < 0, 0, t_stats)) %>%
   ggplot(aes(x = a, y = t_stats, color = read_density)) +
   geom_boxplot() +
+  scale_color_manual(values = gradient_colors[c(5, 4, 3)]) +
   labs(y = "T statistic", x = expression("True " * alpha * zeta), color = "Exp. Level") +
-  # facet_grid(r ~ .) +
   cowplot::theme_cowplot()
 
 ggsave(file.path(figure_dir, paste0("lrt_beta_fix_beta_t_stats", suffix, ".png")),

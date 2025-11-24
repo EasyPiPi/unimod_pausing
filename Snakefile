@@ -29,6 +29,7 @@ metadata_comparison = pd.read_csv("metadata/metadata_comparison.csv", dtype=str)
 ## Simulated data ##
 # simulations for LRT
 metadata_lrt_params = pd.read_csv("metadata/simulation_params_lrt.csv", dtype=str)
+metadata_dist_params = pd.read_csv("metadata/simulation_params_pause_distribution.csv", dtype=str)
 
 #### store wildcard for easier access ####
 sample_wildcard = "{assay}-{cell_line}-{reference}-{group}-{read_type}-{replicate}"
@@ -55,7 +56,7 @@ rule all:
         #### Simulation ####
         ## LRT ##
         os.path.join("indicator/simulation/lrt_visualization", "pause_escape.done"),
-        os.path.join("indicator/simulation/lrt_visualization", "pause_distribution.done")
+        expand(os.path.join("indicator/simulation/lrt_visualization", "{lambda_exp}", "pause_distribution.done"), lambda_exp = ["lrt_high", "lrt_median", "lrt_low"])
 
 ##### load rules #####
 include: "rules/proseq.smk"

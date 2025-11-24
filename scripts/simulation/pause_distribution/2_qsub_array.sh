@@ -14,7 +14,7 @@
 # a string to record when the script was run
 echo "Script is run on $(date +"%Y%m%d%I%M%S%p")"
 # a single sh file contains all the CMDs
-SHFILE=simulation_v1.sh
+SHFILE=simulation_pause_distribution.sh
 # each time pull out a single line to run
 SH=$(cat $SHFILE | head -n $SGE_TASK_ID | tail -n 1)
 # run the chosen CMD

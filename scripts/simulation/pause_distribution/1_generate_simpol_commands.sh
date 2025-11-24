@@ -1,4 +1,4 @@
-output_file="simulation_v1.sh"
+output_file="simulation_pause_distribution.sh"
 
 > "$output_file"
 

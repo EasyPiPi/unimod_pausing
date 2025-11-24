@@ -2,7 +2,7 @@
 # Simulated data are generated using SimPol 
 
 #### subsample read counts ####
-rule subsample_simulation_for_lrts_with_matched_coverage:
+rule subsample_simulation_for_lrt_pause_escape:
     input:
         rds = os.path.join("outputs/simulation/data_lrt", "{param_id}_pos.RDS")
     params:
@@ -20,9 +20,32 @@ rule subsample_simulation_for_lrts_with_matched_coverage:
         os.path.join("logs/simulation/lrt_pause_escape", "{param_id}_{lambda_exp}.log")
     output:
         rate_tbl = os.path.join("outputs/simulation/tables/lrt_pause_escape", "{param_id}_{lambda_exp}.RDS"),
-        rnap_tbl = os.path.join("outputs/simulation/tables/lrt_pause_escape", "{param_id}_{lambda_exp}.csv")
+        rnap_tbl = os.path.join("outputs/simulation/tables/lrt_pause_escape", "{param_id}_{lambda_exp}.csv"),
+        bw = os.path.join("outputs/simulation/tables/lrt_pause_escape", "{param_id}_{lambda_exp}.bw")
     script:
-        "../scripts/simulation/pause_escape/subsample_simulation_pause_release.R"
+        "../scripts/simulation/pause_escape/subsample_simulation_pause_escape.R"
+
+rule subsample_simulation_for_lrt_pause_distribution:
+    input:
+        rds = os.path.join("outputs/simulation/data_fk", "{param_id}", "positions/position_matrix_400000.csv")
+    params:
+        helper = "scripts/unimod/helper_function_em_pause_release.R",
+        sample_cell = 5000, # number of cells for subsampling,
+        sample_n = 100, # number of times to sample
+        lambda_exp = "{lambda_exp}", # scaling factor to match simulation to coverage in experimental data
+        matched_len = 20000,
+        sel_sample = "{param_id}",
+        count_rnap = False
+    threads:1
+    wildcard_constraints:
+       param_id="[^_]+"
+    log:
+        os.path.join("logs/simulation/lrt_pause_distribution", "{param_id}_{lambda_exp}.log")
+    output:
+        rate_tbl = os.path.join("outputs/simulation/tables/lrt_pause_distribution", "{param_id}_{lambda_exp}.RDS"),
+        bw = os.path.join("outputs/simulation/tables/lrt_pause_distribution", "{param_id}_{lambda_exp}.bw")
+    script:
+        "../scripts/simulation/pause_distribution/subsample_simulation_pause_distribution.R"
 
 #### visualize results ####
 rule lrt_pause_escape:
@@ -41,14 +64,17 @@ rule lrt_pause_escape:
         "../scripts/simulation/pause_escape/lrt_rates.R"
 
 rule lrt_pause_distribution:
+    input:
+        expand(os.path.join("outputs/simulation/tables/lrt_pause_distribution", "{param_id}_{lambda_exp}.RDS"), param_id = metadata_dist_params.param_id, lambda_exp = ["lrt_high", "lrt_median", "lrt_low"])
     params:
         helper = "scripts/unimod/helper_function_em_two_condition.R",
-        table_dir = "outputs/simulation/data_fk/subsampling/high",
-        figure_dir = "outputs/simulation/figures/lrt_pause_distribution"
+        table_dir = "outputs/simulation/tables/lrt_pause_distribution",
+        figure_dir = os.path.join("outputs/simulation/figures/lrt_pause_distribution", "{lambda_exp}"),
+        lambda_exp = "{lambda_exp}"
     threads:1
     log:
-        os.path.join("logs/simulation/lrt_visualization", "pause_distribution.log")
+        os.path.join("logs/simulation/lrt_visualization", "{lambda_exp}", "pause_distribution.log")
     output:
-        done = touch(os.path.join("indicator/simulation/lrt_visualization", "pause_distribution.done"))
+        done = touch(os.path.join("indicator/simulation/lrt_visualization", "{lambda_exp}", "pause_distribution.done"))
     script:
         "../scripts/simulation/pause_distribution/lrt_fk.R"
