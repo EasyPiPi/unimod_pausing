@@ -308,7 +308,7 @@ p <- rc_tbl_gb %>%
   ) +
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave(file.path(figure_dir, paste0("lrt_omega_fix_beta", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("lrt_omega_fix_beta", suffix, ".pdf")),
   plot = p,
   width = 8, height = 3
 )
@@ -325,7 +325,7 @@ p <- rc_tbl_gb %>%
   ) +
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave(file.path(figure_dir, paste0("lrt_omega_fix_alpha", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("lrt_omega_fix_alpha", suffix, ".pdf")),
   plot = p,
   width = 8, height = 3
 )
@@ -341,11 +341,12 @@ p <- pause_lrt_tbl %>%
   labs(
     y = "Statistical Power", x = expression("True " * beta * zeta),
     color = "Exp. Level", linetype = "Category"
-  )
+  ) +
+  theme(legend.position = c(0.85, 0.2))
 
-ggsave(file.path(figure_dir, paste0("lrt_beta_fix_alpha", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("lrt_beta_fix_alpha", suffix, ".pdf")),
   plot = p,
-  width = 8, height = 3
+  width = 8, height = 4
 )
 
 # figure for chi square test
@@ -364,7 +365,7 @@ p <- chi_tbl %>%
   ) +
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave(file.path(figure_dir, paste0("chi_sq_test", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("chi_sq_test", suffix, ".pdf")),
   plot = p,
   width = 8, height = 3
 )
@@ -394,10 +395,12 @@ p <- test_cpr %>%
   facet_wrap(~read_density, nrow = 1) +
   labs(
     x = expression("True " * beta * zeta),
-    y = "Statistical Power"
-  )
+    y = "Statistical Power",
+    fill = "Method"
+  ) +
+  theme(legend.position = c(0.88, 0.8))
 
-ggsave(file.path(figure_dir, paste0("test_comparison", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("test_comparison", suffix, ".pdf")),
   plot = p,
   width = 8, height = 4
 )
@@ -420,7 +423,7 @@ p <- test_cpr %>%
     y = "Statistical Power"
   )
 
-ggsave(file.path(figure_dir, paste0("test_comparison_w_num", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("test_comparison_w_num", suffix, ".pdf")),
   plot = p,
   width = 8, height = 8
 )
@@ -440,7 +443,7 @@ p <- rc_tbl_gb %>%
     legend.position = c(0.72, 0.3)
   )
 
-ggsave(file.path(figure_dir, paste0("lrt_beta_fix_alpha", suffix, "_grant.png")),
+ggsave(file.path(figure_dir, paste0("lrt_beta_fix_alpha", suffix, "_grant.pdf")),
   plot = p,
   width = 4, height = 2.5
 )
@@ -457,7 +460,7 @@ p <- rc_tbl_gb %>%
   ) +
   theme(plot.title = element_text(hjust = 0.5))
 
-ggsave(file.path(figure_dir, paste0("lrt_beta_fix_beta", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("lrt_beta_fix_beta", suffix, ".pdf")),
   plot = p,
   width = 8, height = 3
 )
@@ -481,7 +484,7 @@ p <- rc_tbl %>%
   ) +
   labs(x = expression("True " * alpha * zeta), y = expression(chi), color = "Exp. Level")
 
-ggsave(file.path(figure_dir, paste0("chi_distribution_with_targeted_read_density", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("chi_distribution_with_targeted_read_density", suffix, ".pdf")),
   plot = p,
   width = 8, height = 3
 )
@@ -496,7 +499,7 @@ p <- rc_tbl_gb %>%
   labs(y = "T statistic", x = expression("True " * alpha * zeta), color = "Exp. Level") +
   cowplot::theme_cowplot()
 
-ggsave(file.path(figure_dir, paste0("lrt_omega_fix_beta_t_stats", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("lrt_omega_fix_beta_t_stats", suffix, ".pdf")),
   plot = p,
   width = 8, height = 3
 )
@@ -510,7 +513,7 @@ p <- rc_tbl_gb %>%
   labs(y = "T statistic", x = expression("True " * beta * zeta), color = "Exp. Level") +
   cowplot::theme_cowplot()
 
-ggsave(file.path(figure_dir, paste0("lrt_omega_fix_alpha_t_stats", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("lrt_omega_fix_alpha_t_stats", suffix, ".pdf")),
   plot = p,
   width = 8, height = 3
 )
@@ -525,7 +528,7 @@ p <- rc_tbl_gb %>%
   labs(y = "T statistic", x = expression("True " * beta * zeta), color = "Exp. Level") +
   cowplot::theme_cowplot()
 
-ggsave(file.path(figure_dir, paste0("lrt_beta_fix_alpha_t_stats", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("lrt_beta_fix_alpha_t_stats", suffix, ".pdf")),
   plot = p,
   width = 8, height = 3
 )
@@ -540,7 +543,7 @@ p <- rc_tbl_gb %>%
   labs(y = "T statistic", x = expression("True " * alpha * zeta), color = "Exp. Level") +
   cowplot::theme_cowplot()
 
-ggsave(file.path(figure_dir, paste0("lrt_beta_fix_beta_t_stats", suffix, ".png")),
+ggsave(file.path(figure_dir, paste0("lrt_beta_fix_beta_t_stats", suffix, ".pdf")),
   plot = p,
   width = 8, height = 3
 )
