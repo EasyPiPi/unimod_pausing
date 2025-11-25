@@ -13,20 +13,21 @@ lambda <- snakemake@params[["lambda_exp"]]
 library(GenomicRanges)
 library(tidyverse)
 
-# #### testing files ####
+#### testing files ####
 # root_dir <- "~/Desktop/github/unimod_pausing"
 
+# lambda <- "lrt_high"
 # table_dir <-
 #   file.path(root_dir, "outputs/simulation/tables/lrt_pause_distribution")
 # figure_dir <-
-#   file.path(root_dir, "outputs/simulation/figures/lrt_pause_distribution")
+#   file.path(root_dir, "outputs/simulation/figures/lrt_pause_distribution", lambda)
 
 # helper_in <-
 #   file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
 #### end of parsing arguments ####
-
 dir.create(figure_dir, showWarnings = FALSE, recursive = TRUE)
 
+theme_set(cowplot::theme_cowplot())
 # load(file = file.path(figure_dir, "fk_lrt.RData"))
 
 compute_in_range_proportion <- function(mean, sd, lower = 0, upper = 200) {
@@ -236,7 +237,6 @@ for (i in 1:nrow(valid_combinations)) {
     geom_text(aes(label = round(power, 2)), size = 3) +
     scale_fill_gradient(low = "white", high = "steelblue") +
     labs(x = "ksd", y = "k", fill = "Power") +
-    theme_minimal() +
     theme(
       axis.text.x = element_text(angle = 45, hjust = 1)
     )
@@ -265,16 +265,20 @@ power_by_k_ksd_normalized <- lrt_res_all %>%
     power = mean(sig, na.rm = TRUE), .groups = "drop"
   )
 
-p1 <- ggplot(power_by_k_ksd_normalized, aes(x = nd_k, y = nd_ksd, color = power)) +
+p1 <- ggplot(
+  power_by_k_ksd_normalized,
+  aes(x = nd_k, y = nd_ksd, color = power)
+) +
   geom_point(size = 1, alpha = 0.8) +
   scale_color_viridis_c(option = "plasma") +
-  theme_minimal() +
-  theme(
-    axis.ticks = element_line(color = "black"),
-    axis.line = element_line(color = "black")
-  ) +
-  labs(x = "Differences in mean of k", y = "Normalized difference in sd of k", color = "Statistical\npower")
+  labs(
+    x = "Differences in mean of k", y = "Normalized difference in sd of k",
+    color = "Statistical\npower"
+  )
 
-ggsave(paste0(figure_dir, "/", "statistical_power_filtered.pdf"), p1, width = 5, height = 4)
+ggsave(file.path(figure_dir, "statistical_power_filtered.pdf"),
+  p1,
+  width = 5, height = 4
+)
 
 save.image(file = file.path(figure_dir, "fk_lrt.RData"))
