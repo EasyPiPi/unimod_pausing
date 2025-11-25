@@ -35,7 +35,8 @@ paired_colors <- c(
   "#d86967", "#eebabb"
 )
 gradient_colors <- c("#403990", "#80A6E2", "#FBDD85", "#F46F43", "#CF3D3E")
-bar_colors <- c("#00AFBB", "#E7B800", "#FC4E07")
+# bar_colors <- c("#00AFBB", "#E7B800", "#FC4E07")
+bar_colors <- c("#1868B2", "#F3A332")
 
 # min and max position of pause site
 kmin <- 1

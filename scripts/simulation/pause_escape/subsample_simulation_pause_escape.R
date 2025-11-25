@@ -206,28 +206,28 @@ bw_dfs <- bw_dfs %>%
     polII_prop = rc_landing / sample_cell
   )
 
-# whether to match the simulated number of RNAPs to read coverage in experimental data or not
-# here match RNAP number within kmin to kmax, RNAP in gene body will be taken care
-# of afterwards
+# whether to match the simulated number of RNAPs to read coverage
+# in experimental data or not
 if (!is.null(lambda)) {
-  polII_grng <- map(polII_grng, function(grng) {
-    grng$score[kmin:kmax] <-
-      rpois(length(kmin:kmax), grng$score[kmin:kmax] / sample_cell * lambda)
-    # first 20bp get removed because they are usually not seen in sequencing
-    grng$score[1:20] <- 0
-    return(grng)
-  })
+  polII_grng <-
+    map(polII_grng, function(grng) {
+      grng$score[kmin:gene_len] <-
+        rpois(length(kmin:gene_len), grng$score[kmin:gene_len] / sample_cell * lambda)
+      # # first 20bp get removed because they are usually not seen in sequencing
+      # grng$score[1:20] <- 0
+      return(grng)
+    })
   bw_dfs$rc_region <- map(polII_grng, ~ summarise_bw(.x, gn_rng))
   bw_dfs$rc_tss <- map_dbl(bw_dfs$rc_region, "tss")
   # bw_dfs$rc_gb <-map_dbl(bw_dfs$rc_region, "gb")
   # bw_dfs$rc_landing <-map_dbl(bw_dfs$rc_region, "landing")
 }
 
-# match RNAP number within gene bodies to desired read coverage
+# match RNAP number within gene bodies to desired read coverage given new length
 if (!is.null(lambda)) {
   pois_mean <- (lambda * bw_dfs$rc_gb / sample_cell) * (matched_gb_len / len$gb)
   bw_dfs$rc_gb <- rpois(length(pois_mean), pois_mean)
-  # assign matched gene body length as gene body length
+  # assign matched gene body length to gene body length
   len$gb <- matched_gb_len
 }
 
