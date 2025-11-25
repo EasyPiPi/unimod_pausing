@@ -200,14 +200,11 @@ bw_dfs <- bw_dfs %>%
   )
 
 # whether to match the simulated number of RNAPs to read coverage in experimental data or not
-# here match RNAP number within kmin to kmax, RNAP in gene body will be taken care
-# of afterwards
 if (!is.null(lambda)) {
   polII_grng <- map(polII_grng, function(grng) {
-    grng$score[kmin:kmax] <-
-      rpois(length(kmin:kmax), grng$score[kmin:kmax] / sample_cell * lambda)
+    grng$score[kmin:gene_len] <-
+      rpois(length(kmin:gene_len), grng$score[kmin:gene_len] / sample_cell * lambda)
     # first 20bp get removed because they are usually not seen in sequencing
-    # for testing!!!!!
     # grng$score[1:20] <- 0
     return(grng)
   })

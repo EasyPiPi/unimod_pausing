@@ -51,7 +51,7 @@ to <- max(unlist(lapply(bw_list_chr, function(gr) if (length(gr)) max(end(gr)) e
 
 # compute global y-axis limits
 all_scores <- unlist(lapply(bw_list_chr, function(gr) if (length(gr)) gr$score else numeric(0)))
-ylim <- c(0, max(all_scores, na.rm = TRUE))
+ylim <- c(-0.05 * max(all_scores, na.rm = TRUE), max(all_scores, na.rm = TRUE))
 
 # Create gradient colors from #1868B2
 n_tracks <- length(bw_list_chr)
@@ -60,11 +60,11 @@ gradient_colors <- colorRampPalette(c("#1868B2", "#87CEEB"))(n_tracks)
 tracks <- Map(function(gr, nm, col) {
   DataTrack(
     range = gr, data = gr$score, type = "hist", name = nm, ylim = ylim,
-    fill = col, col = col, col.histogram = col, fill.histogram = col
+    fill = col, col = col, col.histogram = col, fill.histogram = col,
+    background.title = "white", col.title = "grey85", col.axis = "grey85",
+    cex.axis = 0.7
   )
 }, bw_list_chr, names(bw_list_chr), gradient_colors)
-
-if (!dir.exists(figure_dir)) dir.create(figure_dir, recursive = TRUE)
 
 save_tracks_plot <-
   function(tracks, chr, from, to, lambda, figure_dir, width, height) {
@@ -84,30 +84,29 @@ save_tracks_plot <-
   }
 
 # Call the function to save the plot
+# Whole Gene
 save_tracks_plot(
   tracks, chr, from, to, lambda, figure_dir,
   width = 6, height = 6
 )
-
+# TSS Region
 save_tracks_plot(
-  tracks, chr, from + kmin - 1,
-  from + kmax - 1, lambda, figure_dir,
-  width = 2, height = 6
+  tracks, chr, from + kmin - 81,
+  from + kmax - 21, lambda, figure_dir,
+  width = 1.5, height = 6
 )
 
 tracks2 <- Map(function(gr, nm, col) {
   DataTrack(
-    range = gr, data = gr$score, type = "hist", name = nm, ylim = c(0, 0.5),
-    fill = col, col = col, col.histogram = col, fill.histogram = col
+    range = gr, data = gr$score, type = "hist", name = nm, ylim = c(-0.025, 0.5),
+    fill = col, col = col, col.histogram = col, fill.histogram = col,
+    background.title = "white", col.title = "grey85", col.axis = "grey85",
+    cex.axis = 0.7
   )
 }, bw_list_chr, names(bw_list_chr), gradient_colors)
-
+# Gene Body
 save_tracks_plot(
   tracks2, chr, from + 500 - 1,
   to, lambda, figure_dir,
   width = 6, height = 6
-)
-
-plotTracks(c(list(GenomeAxisTrack()), tracks),
-  chromosome = chr, from = from + kmin - 1, to = from + kmax - 1
 )
