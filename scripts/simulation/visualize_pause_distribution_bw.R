@@ -1,17 +1,27 @@
+#### log file ####
+log <- file(snakemake@log[[1]], open = "wt")
+sink(file = log, type = "output")
+sink(file = log, type = "message")
+
+#### snakemake files ####
+table_dir <- snakemake@params[["table_dir"]]
+figure_dir <- snakemake@params[["figure_dir"]]
+lambda <- snakemake@params[["lambda_exp"]]
+
 #### load packages ####
 library(tidyverse)
 library(rtracklayer)
 library(Gviz)
 
-#### testing files ####
-root_dir <- "~/Desktop/github/unimod_pausing"
+# #### testing files ####
+# root_dir <- "~/Desktop/github/unimod_pausing"
 
-lambda <- "lrt_high"
+# lambda <- "lrt_high"
 
-table_dir <-
-  file.path(root_dir, "outputs/simulation/tables/lrt_pause_distribution")
-figure_dir <-
-  file.path(root_dir, "outputs/simulation/figures/lrt_pause_distribution", lambda)
+# table_dir <-
+#   file.path(root_dir, "outputs/simulation/tables/lrt_pause_distribution")
+# figure_dir <-
+#   file.path(root_dir, "outputs/simulation/figures/lrt_pause_distribution", lambda)
 
 #### end of parsing arguments ####
 bar_colors <- c("#1868B2", "#F3A332")
@@ -86,7 +96,7 @@ make_gviz_tracks <- function(rate_tbl) {
     )
   }, bw_list_chr, names(bw_list_chr), gradient_colors)
 
-  return(tracks)
+  return(list("tracks" = tracks, "chr" = chr, "from" = from, "to" = to))
 }
 
 save_tracks_plot <-
@@ -116,14 +126,14 @@ tracks_k <- make_gviz_tracks(rate_subset_k)
 # Call the function to save the plot
 # Whole Gene
 save_tracks_plot(
-  tracks_k, chr, from, to, lambda,
+  tracks_k$tracks, tracks_k$chr, tracks_k$from, tracks_k$to, lambda,
   file.path(figure_dir, "k"),
   width = 6, height = 6
 )
 # Pause Region
 save_tracks_plot(
-  tracks_k, chr, from + kmin - 1,
-  from + kmax - 1, lambda,
+  tracks_k$tracks, tracks_k$chr, tracks_k$from + kmin - 1,
+  tracks_k$from + kmax - 1, lambda,
   file.path(figure_dir, "k"),
   width = 2.5, height = 6
 )
@@ -137,14 +147,14 @@ tracks_ksd <- make_gviz_tracks(rate_subset_ksd)
 # Call the function to save the plot
 # Whole Gene
 save_tracks_plot(
-  tracks_ksd, chr, from, to, lambda,
+  tracks_ksd$tracks, tracks_ksd$chr, tracks_ksd$from, tracks_ksd$to, lambda,
   file.path(figure_dir, "ksd"),
   width = 6, height = 6
 )
 # Pause Region
 save_tracks_plot(
-  tracks_ksd, chr, from + kmin - 1,
-  from + kmax - 1, lambda,
+  tracks_ksd$tracks, tracks_ksd$chr, tracks_ksd$from + kmin - 1,
+  tracks_ksd$from + kmax - 1, lambda,
   file.path(figure_dir, "ksd"),
   width = 2.5, height = 6
 )

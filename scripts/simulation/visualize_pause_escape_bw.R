@@ -1,3 +1,13 @@
+#### log file ####
+log <- file(snakemake@log[[1]], open = "wt")
+sink(file = log, type = "output")
+sink(file = log, type = "message")
+
+#### snakemake files ####
+table_dir <- snakemake@params[["table_dir"]]
+figure_dir <- snakemake@params[["figure_dir"]]
+lambda <- snakemake@params[["lambda_exp"]]
+
 #### load packages ####
 library(tidyverse)
 library(rtracklayer)
@@ -6,10 +16,10 @@ library(Gviz)
 #### testing files ####
 root_dir <- "~/Desktop/github/unimod_pausing"
 
-table_dir <- file.path(root_dir, "outputs/simulation/tables/lrt_pause_escape")
-figure_dir <- file.path(root_dir, "outputs/simulation/figures/lrt_pause_escape")
+# table_dir <- file.path(root_dir, "outputs/simulation/tables/lrt_pause_escape")
+# figure_dir <- file.path(root_dir, "outputs/simulation/figures/lrt_pause_escape")
 
-lambda <- "lrt_high"
+# lambda <- "lrt_high"
 
 #### end of parsing arguments ####
 bar_colors <- c("#1868B2", "#F3A332")
