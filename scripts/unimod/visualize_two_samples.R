@@ -138,6 +138,12 @@ save_png <- function(file_name, plot_fun, width = 600, height = 400) {
   invisible(dev.off())
 }
 
+save_pdf <- function(file_name, plot_fun, width = 8, height = 6) {
+  pdf(file = file_name, width = width, height = height)
+  plot_fun
+  invisible(dev.off())
+}
+
 meta_plot <- function(sm, smlcolors, meta.rescale = FALSE, xcoords = c(-250, 250),
                       centralTend = "mean", dispersion = NULL, ylab = "Average Read Counts", xlab = "Distance from TSS",
                       ylim = c(0, 0.15)) {
@@ -150,6 +156,41 @@ meta_plot <- function(sm, smlcolors, meta.rescale = FALSE, xcoords = c(-250, 250
   )
   legend("topright", names(sm), lty = c(1, 1), lwd = c(2.5, 2.5), col = smlcolors[c(2, 6)], cex = 1.5)
 }
+
+meta_plot <- function(sm, smlcolors, meta.rescale = FALSE, xcoords = c(-250, 250),
+                      centralTend = "mean", dispersion = NULL,
+                      ylab = "Average Read Counts", xlab = "Distance from TSS",
+                      ylim = c(0, 0.15)) {
+  op <- par(mar = c(4, 5, 1, 0), xaxs = "i", yaxs = "i")
+  on.exit(par(op), add = TRUE)
+
+  plotMeta(
+    sm,
+    xcoords = xcoords,
+    meta.rescale = meta.rescale,
+    line.col = smlcolors[c(2, 6)],
+    centralTend = centralTend,
+    dispersion = dispersion,
+    xlab = xlab, ylab = ylab,
+    dispersion.col = smlcolors[c(1, 5)],
+    ylim = ylim,
+    xlim = range(xcoords), # <-- KEY FIX
+    cex.lab = 1.5, cex.axis = 1.2,
+    bty = "l"
+  )
+
+  usr <- par("usr")
+  legend(
+    x = usr[1] + 0.02 * diff(usr[1:2]),
+    y = usr[4] - 0.02 * diff(usr[3:4]),
+    legend = names(sm),
+    lty = c(1, 1), lwd = c(2.5, 2.5),
+    col = smlcolors[c(2, 6)],
+    cex = 1.5,
+    bty = "n"
+  )
+}
+
 
 ## plot PRO-seq density around TSS and within gene body ##
 # metaplot
@@ -168,6 +209,11 @@ sm_pause <- ScoreMatrixList(
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_around_tss.png"),
+  plot_fun = meta_plot(sm_pause, paired_color, ylim = NULL, dispersion = "se")
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_signal_around_tss.pdf"),
   plot_fun = meta_plot(sm_pause, paired_color, ylim = NULL, dispersion = "se")
 )
 
