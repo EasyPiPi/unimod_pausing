@@ -30,7 +30,7 @@ library(ggpointdensity)
 library(viridis)
 library(ggExtra)
 
-# #### testing files ####
+#### testing files ####
 # root_dir <- "~/Desktop/github/unimod_pausing"
 
 # helper_tc_in <- file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
@@ -64,7 +64,7 @@ library(ggExtra)
 # chi_out <- file.path(result_dir, "chi.csv")
 # beta_out <- file.path(result_dir, "beta.csv")
 # fk_out <- file.path(result_dir, "fk.csv")
-# #### end of parsing arguments ####
+#### end of parsing arguments ####
 
 dir.create(result_dir, recursive = TRUE, showWarnings = FALSE)
 source(helper_tc_in)
@@ -73,7 +73,7 @@ source(helper_pr_in)
 ## set up parameters ##
 # plotting parameters
 theme_set(cowplot::theme_cowplot())
-scatter_colors <- c("#6e8fb2", "gray", "#c16e71")
+# scatter_colors <- c("#6e8fb2", "gray", "#c16e71")
 paired_colors <- c(
   "#EAB67A", "#F5D8B7",
   "#7DA494", "#B6C9C0",
@@ -81,7 +81,7 @@ paired_colors <- c(
   "#d86967", "#eebabb"
 )
 bar_colors <- c("#00AFBB", "#E7B800", "#FC4E07")
-# scatter_colors <- c("#E41A1C", "#377EB8", "gray")
+scatter_colors <- c("#377EB8", "gray", "#E41A1C")
 
 # model parameters
 k <- 50
@@ -419,6 +419,7 @@ fk_tbl <- fk_tbl %>%
   mutate(
     significant =
       case_when(
+        # padj_fk < 0.05 ~ "Yes",
         (padj_fk < 0.05) & ((abs(delta_sd) > 0.2) | (abs(delta_mean) > 20)) ~ "Yes",
         TRUE ~ "No"
       ),
@@ -443,7 +444,11 @@ p <- chi_tbl %>%
 
 ggsave(file.path(result_dir, "chi_distribution.pdf"),
   plot = p,
-  width = 4, height = 5
+  width = 2.5, height = 4
+)
+
+ggsave(file.path(result_dir, "chi_distribution.png"),
+  plot = p, width = 2.5, height = 4
 )
 
 p <- chi_tbl %>%
@@ -456,10 +461,14 @@ p <- chi_tbl %>%
     y = expression(log[2] * "FC(Treated/Control)"),
     x = expression(log[2] * "mean(" * chi * ")"),
     color = "Category"
-  ) +
-  cowplot::theme_cowplot()
+  )
 
 ggsave(file.path(result_dir, "chi_mean_vs_lfc.pdf"),
+  plot = p,
+  width = 5, height = 3
+)
+
+ggsave(file.path(result_dir, "chi_mean_vs_lfc.png"),
   plot = p,
   width = 5, height = 3
 )
@@ -481,7 +490,12 @@ p <- beta_tbl %>%
 
 ggsave(file.path(result_dir, "beta_distribution.pdf"),
   plot = p,
-  width = 4, height = 5
+  width = 2.5, height = 4
+)
+
+ggsave(file.path(result_dir, "beta_distribution.png"),
+  plot = p,
+  width = 2.5, height = 4
 )
 
 p <- beta_tbl %>%
@@ -499,6 +513,11 @@ p <- beta_tbl %>%
   cowplot::theme_cowplot()
 
 ggsave(file.path(result_dir, "beta_mean_vs_lfc.pdf"),
+  plot = p,
+  width = 5, height = 3
+)
+
+ggsave(file.path(result_dir, "beta_mean_vs_lfc.png"),
   plot = p,
   width = 5, height = 3
 )
@@ -554,6 +573,11 @@ ggsave(file.path(result_dir, "gene_number_with_differential_rates.pdf"),
   width = 6, height = 4
 )
 
+ggsave(file.path(result_dir, "gene_number_with_differential_rates.png"),
+  plot = p,
+  width = 6, height = 4
+)
+
 # mean and variance of pause sites in different beta categories
 p <- beta_tbl %>%
   ggplot() +
@@ -574,7 +598,7 @@ p1 <- beta_tbl %>%
   scale_color_viridis() +
   geom_vline(xintercept = c(50, 100), linetype = "dashed", color = "gray") +
   coord_cartesian(xlim = c(0, 200), ylim = c(0, 70)) +
-  labs(x = "Mean of k", y = "SD of k")
+  labs(x = expression(mu), y = expression(sigma), color = "N neighbors")
 
 p2 <- beta_tbl %>%
   ggplot(aes(x = fk_mean2, y = fk_std2)) +
@@ -582,14 +606,20 @@ p2 <- beta_tbl %>%
   scale_color_viridis() +
   geom_vline(xintercept = c(50, 100), linetype = "dashed", color = "gray") +
   coord_cartesian(xlim = c(0, 200), ylim = c(0, 70)) +
-  labs(x = "Mean of k", y = "SD of k")
+  labs(x = expression(mu), y = expression(sigma), color = "N neighbors")
 
 p <- cowplot::plot_grid(p1, p2)
 
 ggsave(
   filename = file.path(result_dir, "mean_vs_std_of_k_pointdensity.pdf"), plot = p,
-  width = 14, height = 5
+  width = 9, height = 3
 )
+
+ggsave(
+  filename = file.path(result_dir, "mean_vs_std_of_k_pointdensity.png"), plot = p,
+  width = 9, height = 3
+)
+
 # plot changes in mean and std of pause sites
 p <- fk_tbl %>%
   ggplot(aes(x = delta_mean, y = delta_sd, color = significant)) +
@@ -600,11 +630,10 @@ p <- fk_tbl %>%
   geom_hline(yintercept = -0.2, linetype = "dashed", color = "grey") +
   geom_hline(yintercept = 0.2, linetype = "dashed", color = "grey") +
   labs(
-    x = "Differences in mean of k",
-    y = "Normalized difference in sd of k",
+    x = expression("Differences in " * mu),
+    y = expression("Normalized differences in " * sigma),
     color = "Significant"
   ) +
-  cowplot::theme_cowplot() +
   theme(
     legend.position = c(0.75, 0.15)
   )
@@ -613,6 +642,11 @@ p <- ggMarginal(p, type = "histogram", bins = 50, fill = "grey60", color = "blac
 
 ggsave(
   filename = file.path(result_dir, "lrt_mean_vs_std_of_k_pointdensity.pdf"), plot = p,
+  width = 6, height = 5
+)
+
+ggsave(
+  filename = file.path(result_dir, "lrt_mean_vs_std_of_k_pointdensity.png"), plot = p,
   width = 6, height = 5
 )
 
