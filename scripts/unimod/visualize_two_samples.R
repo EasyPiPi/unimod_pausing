@@ -89,8 +89,9 @@ walk(
 theme_set(cowplot::theme_cowplot())
 # paired_color <- RColorBrewer::brewer.pal(name = "Paired", n = 6)
 scatter_colors <- c("#377EB8", "gray", "#E41A1C")
-paired_color <-
-  c("#A6CEE3", "#377EB8", "#B2DF8A", "#33A02C", "#FB9A99", "#E41A1C")
+paired_colors <-
+  c("#A6CEE3", "#377EB8", "#bbbbd6", "#58539f", "#FB9A99", "#E41A1C")
+bar_colors <- c("#00AFBB", "#E7B800", "#FC4E07")
 
 load(grng_in)
 gtf <- readRDS(gtf_in)
@@ -198,12 +199,12 @@ sm_pause <- ScoreMatrixList(
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_around_tss.png"),
-  plot_fun = meta_plot(sm_pause, paired_color, ylim = NULL, dispersion = "se")
+  plot_fun = meta_plot(sm_pause, paired_colors, ylim = NULL, dispersion = "se")
 )
 
 save_pdf(
   file_name = file.path(result_dir, "proseq_signal_around_tss.pdf"),
-  plot_fun = meta_plot(sm_pause, paired_color, ylim = NULL, dispersion = "se")
+  plot_fun = meta_plot(sm_pause, paired_colors, ylim = NULL, dispersion = "se")
 )
 
 sm_pause_up <-
@@ -215,12 +216,12 @@ sm_pause_up <-
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_around_tss_beta_up.png"),
-  plot_fun = meta_plot(sm_pause_up, paired_color, ylim = NULL, dispersion = "se")
+  plot_fun = meta_plot(sm_pause_up, paired_colors, ylim = NULL, dispersion = "se")
 )
 
 save_pdf(
   file_name = file.path(result_dir, "proseq_signal_around_tss_beta_up.pdf"),
-  plot_fun = meta_plot(sm_pause_up, paired_color, ylim = NULL, dispersion = "se")
+  plot_fun = meta_plot(sm_pause_up, paired_colors, ylim = NULL, dispersion = "se")
 )
 
 sm_pause_down <-
@@ -232,12 +233,12 @@ sm_pause_down <-
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_around_tss_beta_down.png"),
-  plot_fun = meta_plot(sm_pause_down, paired_color, ylim = NULL, dispersion = "se")
+  plot_fun = meta_plot(sm_pause_down, paired_colors, ylim = NULL, dispersion = "se")
 )
 
 save_pdf(
   file_name = file.path(result_dir, "proseq_signal_around_tss_beta_down.pdf"),
-  plot_fun = meta_plot(sm_pause_down, paired_color, ylim = NULL, dispersion = "se")
+  plot_fun = meta_plot(sm_pause_down, paired_colors, ylim = NULL, dispersion = "se")
 )
 
 sm_gb <- ScoreMatrixList(
@@ -248,7 +249,7 @@ sm_gb <- ScoreMatrixList(
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_within_genebody.png"),
-  plot_fun = meta_plot(sm_gb, paired_color,
+  plot_fun = meta_plot(sm_gb, paired_colors,
     xlab = "Bins within gene body",
     ylim = NULL, xcoords = c(0, 100), dispersion = "se"
   ),
@@ -257,7 +258,7 @@ save_png(
 
 save_pdf(
   file_name = file.path(result_dir, "proseq_signal_within_genebody.pdf"),
-  plot_fun = meta_plot(sm_gb, paired_color,
+  plot_fun = meta_plot(sm_gb, paired_colors,
     xlab = "Bins within gene body",
     ylim = NULL, xcoords = c(0, 100), dispersion = "se"
   ),
@@ -272,7 +273,7 @@ sm_gb_up <- ScoreMatrixList(
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_within_genebody_beta_up.png"),
-  plot_fun = meta_plot(sm_gb_up, paired_color,
+  plot_fun = meta_plot(sm_gb_up, paired_colors,
     xlab = "Bins within gene body",
     ylim = NULL, xcoords = c(0, 100), dispersion = "se"
   ),
@@ -281,7 +282,7 @@ save_png(
 
 save_pdf(
   file_name = file.path(result_dir, "proseq_signal_within_genebody_beta_up.pdf"),
-  plot_fun = meta_plot(sm_gb_up, paired_color,
+  plot_fun = meta_plot(sm_gb_up, paired_colors,
     xlab = "Bins within gene body",
     ylim = NULL, xcoords = c(0, 100), dispersion = "se"
   ),
@@ -297,7 +298,7 @@ if (length(beta_down) > 5) {
 
   save_png(
     file_name = file.path(result_dir, "proseq_signal_within_genebody_beta_down.png"),
-    plot_fun = meta_plot(sm_gb_down, paired_color,
+    plot_fun = meta_plot(sm_gb_down, paired_colors,
       xlab = "Bins within gene body",
       ylim = NULL, xcoords = c(0, 100), dispersion = "se"
     ),
@@ -306,7 +307,7 @@ if (length(beta_down) > 5) {
 
   save_pdf(
     file_name = file.path(result_dir, "proseq_signal_within_genebody_beta_down.pdf"),
-    plot_fun = meta_plot(sm_gb_down, paired_color,
+    plot_fun = meta_plot(sm_gb_down, paired_colors,
       xlab = "Bins within gene body",
       ylim = NULL, xcoords = c(0, 100), dispersion = "se"
     ),
@@ -390,7 +391,9 @@ beta_up <- beta_tbl %>%
 count_region <- c(bw_pause_filtered, bw_gb_filtered)
 
 # functions for gviz plots
-gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
+gviz_plot <- function(gene_sel, extend_region, category,
+                      dir = "beta", pause_peak = FALSE,
+                      zeta1 = 20, zeta2 = 100) {
   make_data_track <- function(bw, bsize, s, chrom, condition) {
     data_track <- Gviz::DataTrack(
       range = bw,
@@ -400,7 +403,8 @@ gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
       name = paste0(condition, " (", s, ")"),
       col = strand_col[s],
       strand = s,
-      chromosome = chrom
+      chromosome = chrom,
+      background.title = "white", col.title = "grey85", col.axis = "grey85"
     )
     return(data_track)
   }
@@ -443,10 +447,17 @@ gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
   tx_track <-
     GeneRegionTrack(region_gn,
       name = "Gene", shape = "arrow",
-      chromosome = seqnames(gene_tx[1])
+      chromosome = seqnames(gene_tx[1]),
+      background.title = "white", col.title = "grey85", col.axis = "grey85",
+      fill = paired_colors[4], col = paired_colors[4]
     )
+
   count_track <-
-    AnnotationTrack(subsetByOverlaps(count_region, gene_range), shape = "box")
+    AnnotationTrack(subsetByOverlaps(count_region, gene_range),
+      shape = "box",
+      background.title = "white", col.title = "grey85", col.axis = "grey85",
+      fill = paired_colors[3], col = paired_colors[3]
+    )
 
   strand_col <- c(`+` = scatter_colors[1], `-` = scatter_colors[3])
   bsize <- 10
@@ -459,10 +470,14 @@ gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
   trtd_bwm <- subsetByOverlaps(bw_trtd$bwm, bw_range)
   trtd_bwm$score <- abs(trtd_bwm$score)
 
-  ctrl_plus <- make_data_track(ctrl_bwp, bsize, "+", seqnames(gene_tx[1]), condition = "Control")
-  ctrl_minus <- make_data_track(ctrl_bwm, bsize, "-", seqnames(gene_tx[1]), condition = "Control")
-  trtd_plus <- make_data_track(trtd_bwp, bsize, "+", seqnames(gene_tx[1]), condition = "Treated")
-  trtd_minus <- make_data_track(trtd_bwm, bsize, "-", seqnames(gene_tx[1]), condition = "Treated")
+  ctrl_plus <-
+    make_data_track(ctrl_bwp, bsize, "+", seqnames(gene_tx[1]), condition = "Control")
+  ctrl_minus <-
+    make_data_track(ctrl_bwm, bsize, "-", seqnames(gene_tx[1]), condition = "Control")
+  trtd_plus <-
+    make_data_track(trtd_bwp, bsize, "+", seqnames(gene_tx[1]), condition = "Treated")
+  trtd_minus <-
+    make_data_track(trtd_bwm, bsize, "-", seqnames(gene_tx[1]), condition = "Treated")
 
   # Use rolling mean to determine ylim
   ylim <-
@@ -473,15 +488,59 @@ gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
       }
     )))
 
-  save_png(file.path(fig_dir, dir, category, paste0(gene_sel, ".png")),
+  # save_png(file.path(fig_dir, dir, category, paste0(gene_sel, ".png")),
+  #   plotTracks(
+  #     c(
+  #       list(axis_track, tx_track, count_track),
+  #       map(
+  #         list(ctrl_plus, ctrl_minus, trtd_plus, trtd_minus),
+  #         set_datatrack_ylim, c(0, ylim)
+  #       )
+  #     )
+  #   ),
+  #   width = 600, height = 400
+  # )
+
+  save_pdf(file.path(fig_dir, dir, category, paste0(gene_sel, ".pdf")),
     plotTracks(
       c(
         list(axis_track, tx_track, count_track),
-        map(list(ctrl_plus, ctrl_minus, trtd_plus, trtd_minus), set_datatrack_ylim, c(0, ylim))
+        map(
+          list(ctrl_plus, ctrl_minus, trtd_plus, trtd_minus),
+          set_datatrack_ylim, c(0, ylim)
+        )
       )
     ),
-    width = 600, height = 400
+    width = 5, height = 5
   )
+
+  # plot pause peak if needed
+  if (pause_peak) {
+    pause_region <- subsetByOverlaps(count_region, gene_range)
+    pause_region <- pause_region[which.min(width(pause_region))]
+
+    save_pdf(
+      file.path(fig_dir, dir, category, paste0(gene_sel, "_pause.pdf")),
+      plotTracks(
+        c(
+          list(axis_track, tx_track, count_track),
+          purrr::map(
+            list(ctrl_plus, ctrl_minus, trtd_plus, trtd_minus),
+            set_datatrack_ylim, c(0, ylim)
+          )
+        ),
+        from = ifelse(strand(pause_region) == "+",
+          start(pause_region) - zeta1,
+          end(pause_region) - zeta2
+        ),
+        to = ifelse(strand(pause_region) == "+",
+          start(pause_region) + zeta2,
+          end(pause_region) + zeta1
+        )
+      ),
+      width = 2, height = 5
+    )
+  }
 }
 
 # the most significant genes
@@ -571,12 +630,25 @@ sel_genes <-
     "ENSG00000099194", "ENSG00000132182",
     "ENSG00000133454", "ENSG00000139793",
     "ENSG00000110958", "ENSG00000170606",
-    "ENSG00000144381", "ENSG00000151929"
+    "ENSG00000144381", "ENSG00000151929",
+    "ENSG00000163874", "ENSG00000010256"
   )
 
 for (gene_sel in sel_genes) {
-  try(gviz_plot(gene_sel, 5000, "select", dir = "combine"))
+  try(gviz_plot(gene_sel, 1000, "select", dir = "combine"))
 }
+
+try(gviz_plot("ENSG00000163874", 1000, "select",
+  dir = "combine", pause_peak = TRUE,
+  zeta1 = 20, zeta2 = 100
+))
+
+try(
+  gviz_plot("ENSG00000010256", 1000, "select",
+    dir = "combine", pause_peak = TRUE,
+    zeta1 = 20, zeta2 = 200
+  )
+)
 
 # lfc scatter plot
 rate_tbl %>%
