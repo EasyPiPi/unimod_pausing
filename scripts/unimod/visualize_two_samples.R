@@ -87,7 +87,10 @@ walk(
 ## set up parameters ##
 # plotting parameters
 theme_set(cowplot::theme_cowplot())
-paired_color <- RColorBrewer::brewer.pal(name = "Paired", n = 6)
+# paired_color <- RColorBrewer::brewer.pal(name = "Paired", n = 6)
+scatter_colors <- c("#377EB8", "gray", "#E41A1C")
+paired_color <-
+  c("#A6CEE3", "#377EB8", "#B2DF8A", "#33A02C", "#FB9A99", "#E41A1C")
 
 load(grng_in)
 gtf <- readRDS(gtf_in)
@@ -145,23 +148,10 @@ save_pdf <- function(file_name, plot_fun, width = 8, height = 6) {
 }
 
 meta_plot <- function(sm, smlcolors, meta.rescale = FALSE, xcoords = c(-250, 250),
-                      centralTend = "mean", dispersion = NULL, ylab = "Average Read Counts", xlab = "Distance from TSS",
-                      ylim = c(0, 0.15)) {
-  plotMeta(sm,
-    xcoords = xcoords, meta.rescale = meta.rescale,
-    line.col = smlcolors[c(2, 6)],
-    centralTend = centralTend, dispersion = dispersion,
-    xlab = xlab, ylab = ylab,
-    dispersion.col = smlcolors[c(1, 5)], ylim = ylim, cex.lab = 1.5, cex.axis = 1.2
-  )
-  legend("topright", names(sm), lty = c(1, 1), lwd = c(2.5, 2.5), col = smlcolors[c(2, 6)], cex = 1.5)
-}
-
-meta_plot <- function(sm, smlcolors, meta.rescale = FALSE, xcoords = c(-250, 250),
                       centralTend = "mean", dispersion = NULL,
                       ylab = "Average Read Counts", xlab = "Distance from TSS",
                       ylim = c(0, 0.15)) {
-  op <- par(mar = c(4, 5, 1, 0), xaxs = "i", yaxs = "i")
+  op <- par(mar = c(4, 5, 1, 1), xaxs = "i", yaxs = "i")
   on.exit(par(op), add = TRUE)
 
   plotMeta(
@@ -174,20 +164,19 @@ meta_plot <- function(sm, smlcolors, meta.rescale = FALSE, xcoords = c(-250, 250
     xlab = xlab, ylab = ylab,
     dispersion.col = smlcolors[c(1, 5)],
     ylim = ylim,
-    xlim = range(xcoords), # <-- KEY FIX
+    xlim = xcoords,
     cex.lab = 1.5, cex.axis = 1.2,
     bty = "l"
   )
 
-  usr <- par("usr")
   legend(
-    x = usr[1] + 0.02 * diff(usr[1:2]),
-    y = usr[4] - 0.02 * diff(usr[3:4]),
+    "topright",
     legend = names(sm),
     lty = c(1, 1), lwd = c(2.5, 2.5),
     col = smlcolors[c(2, 6)],
     cex = 1.5,
-    bty = "n"
+    bty = "n",
+    inset = 0.02
   )
 }
 
@@ -229,6 +218,11 @@ save_png(
   plot_fun = meta_plot(sm_pause_up, paired_color, ylim = NULL, dispersion = "se")
 )
 
+save_pdf(
+  file_name = file.path(result_dir, "proseq_signal_around_tss_beta_up.pdf"),
+  plot_fun = meta_plot(sm_pause_up, paired_color, ylim = NULL, dispersion = "se")
+)
+
 sm_pause_down <-
   ScoreMatrixList(
     target = GRangesList("Control" = bw_ctrl_bs, "Treated" = bw_trtd_bs),
@@ -238,6 +232,11 @@ sm_pause_down <-
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_around_tss_beta_down.png"),
+  plot_fun = meta_plot(sm_pause_down, paired_color, ylim = NULL, dispersion = "se")
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_signal_around_tss_beta_down.pdf"),
   plot_fun = meta_plot(sm_pause_down, paired_color, ylim = NULL, dispersion = "se")
 )
 
@@ -256,6 +255,15 @@ save_png(
   width = 800, height = 400
 )
 
+save_pdf(
+  file_name = file.path(result_dir, "proseq_signal_within_genebody.pdf"),
+  plot_fun = meta_plot(sm_gb, paired_color,
+    xlab = "Bins within gene body",
+    ylim = NULL, xcoords = c(0, 100), dispersion = "se"
+  ),
+  width = 12, height = 6
+)
+
 sm_gb_up <- ScoreMatrixList(
   target = GRangesList("Control" = bw_ctrl_bs, "Treated" = bw_trtd_bs),
   bin.num = 100, windows = bw_gb_filtered[bw_gb_filtered$gene_id %in% beta_up, ],
@@ -269,6 +277,15 @@ save_png(
     ylim = NULL, xcoords = c(0, 100), dispersion = "se"
   ),
   width = 800, height = 400
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_signal_within_genebody_beta_up.pdf"),
+  plot_fun = meta_plot(sm_gb_up, paired_color,
+    xlab = "Bins within gene body",
+    ylim = NULL, xcoords = c(0, 100), dispersion = "se"
+  ),
+  width = 12, height = 6
 )
 
 if (length(beta_down) > 5) {
@@ -286,47 +303,68 @@ if (length(beta_down) > 5) {
     ),
     width = 800, height = 400
   )
+
+  save_pdf(
+    file_name = file.path(result_dir, "proseq_signal_within_genebody_beta_down.pdf"),
+    plot_fun = meta_plot(sm_gb_down, paired_color,
+      xlab = "Bins within gene body",
+      ylim = NULL, xcoords = c(0, 100), dispersion = "se"
+    ),
+    width = 12, height = 6
+  )
 }
 
 # heatmap
 # sm_pause_scaled <- scaleScoreMatrixList(sm_pause)
 sort_pause_site <- function(sml) {
-  sort_name <- names(sort(apply(sml[[1]]@.Data[, 251:501], MARGIN = 1, FUN = which.max)))
+  sort_name <-
+    names(sort(apply(sml[[1]]@.Data[, 251:501], MARGIN = 1, FUN = which.max)))
   return(as(lapply(sml, function(x) x@.Data[sort_name, ]), "ScoreMatrixList"))
+}
+
+plot_heatmap <- function(sm_pause) {
+  multiHeatMatrix(sort_pause_site(sm_pause),
+    xcoords = c(-250, 250),
+    col = RColorBrewer::brewer.pal("Reds", n = 9),
+    winsorize = c(0, 99), common.scale = TRUE, xlab = "Distance from TSS",
+    cex.axis = 0.8, cex.lab = 1.2
+  )
 }
 
 save_png(
   file_name = file.path(result_dir, "proseq_heatmap_around_tss.png"),
-  plot_fun = multiHeatMatrix(sort_pause_site(sm_pause),
-    xcoords = c(-250, 250),
-    col = RColorBrewer::brewer.pal("Reds", n = 9),
-    winsorize = c(0, 99), common.scale = TRUE, xlab = "Distance from TSS",
-    cex.axis = 0.8, cex.lab = 1.2
-  ),
+  plot_fun = plot_heatmap(sm_pause),
   width = 600, height = 600
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_heatmap_around_tss.pdf"),
+  plot_fun = plot_heatmap(sm_pause),
+  width = 6, height = 6
 )
 
 save_png(
   file_name = file.path(result_dir, "proseq_heatmap_around_tss_beta_up.png"),
-  plot_fun = multiHeatMatrix(sort_pause_site(sm_pause_up),
-    xcoords = c(-250, 250),
-    col = RColorBrewer::brewer.pal("Reds", n = 9),
-    winsorize = c(0, 99), common.scale = TRUE, xlab = "Distance from TSS",
-    cex.axis = 0.8, cex.lab = 1.2
-  ),
+  plot_fun = plot_heatmap(sm_pause_up),
   width = 600, height = 400
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_heatmap_around_tss_beta_up.pdf"),
+  plot_fun = plot_heatmap(sm_pause_up),
+  width = 6, height = 6
 )
 
 if (length(beta_down) > 5) {
   save_png(
     file_name = file.path(result_dir, "proseq_heatmap_around_tss_beta_down.png"),
-    plot_fun = multiHeatMatrix(sort_pause_site(sm_pause_down),
-      xcoords = c(-250, 250),
-      col = RColorBrewer::brewer.pal("Reds", n = 9),
-      winsorize = c(0, 99), common.scale = TRUE, xlab = "Distance from TSS",
-      cex.axis = 0.8, cex.lab = 1.2
-    ),
+    plot_fun = plot_heatmap(sm_pause_down),
     width = 600, height = 600
+  )
+  save_pdf(
+    file_name = file.path(result_dir, "proseq_heatmap_around_tss_beta_down.pdf"),
+    plot_fun = plot_heatmap(sm_pause_down),
+    width = 6, height = 6
   )
 }
 
@@ -336,8 +374,6 @@ save.image(file = file.path(result_dir, "data.RData"))
 if (stringr::str_detect(chi_in, "chivu")) quit(save = "no", status = 0, runLast = FALSE)
 
 zeta <- 2000
-
-theme_set(cowplot::theme_cowplot())
 
 # visualize some interesting tf targets
 chi_tbl <- read_csv(chi_in, show_col_types = FALSE)
@@ -412,7 +448,7 @@ gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
   count_track <-
     AnnotationTrack(subsetByOverlaps(count_region, gene_range), shape = "box")
 
-  strand_col <- c(`+` = "blue", `-` = "red")
+  strand_col <- c(`+` = scatter_colors[1], `-` = scatter_colors[3])
   bsize <- 10
 
   ctrl_bwp <- subsetByOverlaps(bw_ctrl$bwp, bw_range)
