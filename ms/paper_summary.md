@@ -1,5 +1,3 @@
-Here is a list of the papers provided in the sources, summarizing their key findings.
-
 ### **1. Abuhashem et al. (2022)**
 **Title:** *RNA Pol II pausing facilitates phased pluripotency transitions by buffering transcription*
 *   **Biological Context:** Investigates the role of Pol II pausing (specifically the NELF complex) during mouse embryonic development.
