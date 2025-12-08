@@ -81,6 +81,7 @@ if (is.null(lambda)) {
   lambda <- 48.7
 } else if (str_detect(lambda, "lrt")) {
   lambda_lrt <- 1800 * 5000 / 2670 * c(0.0233, 0.0489, 0.0902)
+  # lambda_lrt <- c(188.3, 102.1, 48.7)
   names(lambda_lrt) <- c("lrt_low", "lrt_median", "lrt_high")
   lambda <- lambda_lrt[[lambda]]
 } else {
