@@ -3,24 +3,22 @@
 # EM doesn't include phi estimates
 # functions for EM based on Gaussian distributed k
 get_expectation <- function(fk, Xk, beta) {
-
   Yk <- Xk / (1 - beta + beta / fk)
 
   return(Yk)
 }
 
 get_maximization <- function(chi_hat, Xk, Yk, fk, kmin, kmax) {
-
   t <- sum(Yk)
   u <- sum(Yk * seq(kmin, kmax))
-  v <- sum(Yk * seq(kmin, kmax) ^ 2)
+  v <- sum(Yk * seq(kmin, kmax)^2)
 
-  w <- sum(fk / (1- fk) * (Xk - Yk))
-  z <- sum(fk / (1- fk) * (Xk - Yk) *  seq(kmin, kmax))
-  r <- sum(fk / (1- fk) * (Xk - Yk) *  seq(kmin, kmax) ^ 2)
+  w <- sum(fk / (1 - fk) * (Xk - Yk))
+  z <- sum(fk / (1 - fk) * (Xk - Yk) * seq(kmin, kmax))
+  r <- sum(fk / (1 - fk) * (Xk - Yk) * seq(kmin, kmax)^2)
 
   fk_mean <- (u - z) / (t - w)
-  fk_var <- (v - r) / (t - w) - fk_mean ^ 2
+  fk_var <- (v - r) / (t - w) - fk_mean^2
 
   # avoid small and negative values
   if (fk_var < 1e-10) {
@@ -28,7 +26,7 @@ get_maximization <- function(chi_hat, Xk, Yk, fk, kmin, kmax) {
     # sometimes it looks like an integer but actually it's not
     fk[round(fk_mean)] <- 1
   } else {
-    fk <- dnorm(kmin:kmax, mean = fk_mean, sd = fk_var ^ 0.5)
+    fk <- dnorm(kmin:kmax, mean = fk_mean, sd = fk_var^0.5)
     fk <- fk / sum(fk)
   }
 
@@ -76,19 +74,22 @@ main_EM <- function(fk_int, Xk, kmin, kmax, beta_int, chi_hat, max_itr = 100,
     if (any(hats$fk == 1)) {
       hats$beta <- chi_hat / Xk[which(hats$fk == 1)]
       flag <- "single_site"
-      break}
+      break
+    }
 
     if (i > 1) {
-      diff <- likelihoods[[i]] - likelihoods[[i-1]]
+      diff <- likelihoods[[i]] - likelihoods[[i - 1]]
       if (diff <= tor) break
-      }
     }
+  }
 
   if (i == max_itr) flag <- "max_iteration"
 
   # message("Done!")
 
-  return(list("beta" = hats$beta, "Yk" = Yk, "fk" = hats$fk,
-              "fk_mean" = hats$fk_mean, "fk_var" = hats$fk_var,
-              "betas" = betas, "likelihoods" = likelihoods, "flag" = flag))
+  return(list(
+    "beta" = hats$beta, "Yk" = Yk, "fk" = hats$fk,
+    "fk_mean" = hats$fk_mean, "fk_var" = hats$fk_var,
+    "betas" = betas, "likelihoods" = likelihoods, "flag" = flag
+  ))
 }

@@ -48,8 +48,9 @@ rule analyze_two_samples:
     log:
         os.path.join("logs/analyze_two_samples", "{group_1}" + "_vs_" + "{group_2}" + ".log")
     output:
-        omega = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "omega.csv"),
-        beta = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "beta.csv")
+        chi = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "chi.csv"),
+        beta = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "beta.csv"),
+        fk = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "fk.csv")
     script:
         "../scripts/unimod/analyze_two_samples_DLD1.R"
 
@@ -63,7 +64,7 @@ rule visualize_two_samples:
         bwp2_p3 = os.path.join("outputs/bigwig/p3", "PROseq-DLD1-aoi-{group_2}-SE" + "_plus.bw"),
         bwm2_p3 = os.path.join("outputs/bigwig/p3", "PROseq-DLD1-aoi-{group_2}-SE" + "_minus.bw"),
         beta = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "beta.csv"),
-        omega = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "omega.csv")
+        chi = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}", "chi.csv")
     params:
         result_dir = os.path.join("outputs/between_samples", "{group_1}" + "_vs_" + "{group_2}")
     threads:1

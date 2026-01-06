@@ -16,7 +16,7 @@ bwp2_p3_in <- snakemake@input[["bwp2_p3"]]
 bwm2_p3_in <- snakemake@input[["bwm2_p3"]]
 
 beta_in <- snakemake@input[["beta"]]
-omega_in <- snakemake@input[["omega"]]
+chi_in <- snakemake@input[["chi"]]
 
 result_dir <- snakemake@params[["result_dir"]]
 
@@ -60,7 +60,7 @@ options(ucscChromosomeNames = FALSE)
 #     paste0("NELFC_Auxin_Ctrl", "_vs_", "NELFC_Auxin")
 #   )
 
-# omega_in <- file.path(result_dir, "omega.csv")
+# chi_in <- file.path(result_dir, "chi.csv")
 # beta_in <- file.path(result_dir, "beta.csv")
 
 # #### end of parsing arguments ####
@@ -68,14 +68,14 @@ fig_dir <- file.path(result_dir, "gviz")
 
 walk(
   c(
-    result_dir, fig_dir, file.path(fig_dir, "omega"),
+    result_dir, fig_dir, file.path(fig_dir, "chi"),
     file.path(fig_dir, "beta", c("up", "down")),
     file.path(
       fig_dir, "combine",
       c(
-        "beta_up_omega_up", "beta_down_omega_down",
-        "beta_others_omega_up", "beta_others_omega_down",
-        "beta_down_omega_up", "select"
+        "beta_up_chi_up", "beta_down_chi_down",
+        "beta_others_chi_up", "beta_others_chi_down",
+        "beta_down_chi_up", "select"
       )
     )
   ),
@@ -84,13 +84,21 @@ walk(
 )
 # dir.create(result_dir, showWarnings = FALSE, recursive = TRUE)
 
+## set up parameters ##
+# plotting parameters
+theme_set(cowplot::theme_cowplot())
+# paired_color <- RColorBrewer::brewer.pal(name = "Paired", n = 6)
+scatter_colors <- c("#377EB8", "gray", "#E41A1C")
+paired_colors <-
+  c("#A6CEE3", "#377EB8", "#bbbbd6", "#58539f", "#FB9A99", "#E41A1C")
+bar_colors <- c("#00AFBB", "#E7B800", "#FC4E07")
+
 load(grng_in)
 gtf <- readRDS(gtf_in)
 
 # read in number of spike-in or total number of mappable reads
 # use them as scaling factor
 scale_tbl <- read_csv(spike_in, show_col_types = FALSE)
-# subset the right table
 scale_tbl <- scale_tbl[str_detect(bwp1_p3_in, scale_tbl$sample), ]
 
 scale_factor <-
@@ -134,18 +142,45 @@ save_png <- function(file_name, plot_fun, width = 600, height = 400) {
   invisible(dev.off())
 }
 
-meta_plot <- function(sm, smlcolors, meta.rescale = FALSE, xcoords = c(-250, 250),
-                      centralTend = "mean", dispersion = NULL, ylab = "Average Read Counts", xlab = "Distance from TSS",
-                      ylim = c(0, 0.15)) {
-  plotMeta(sm,
-    xcoords = xcoords, meta.rescale = meta.rescale,
-    line.col = smlcolors[c(2, 6)],
-    centralTend = centralTend, dispersion = dispersion,
-    xlab = xlab, ylab = ylab,
-    dispersion.col = smlcolors[c(1, 5)], ylim = ylim, cex.lab = 1.5, cex.axis = 1.2
-  )
-  legend("topright", names(sm), lty = c(1, 1), lwd = c(2.5, 2.5), col = smlcolors[c(2, 6)], cex = 1.5)
+save_pdf <- function(file_name, plot_fun, width = 8, height = 6) {
+  pdf(file = file_name, width = width, height = height)
+  plot_fun
+  invisible(dev.off())
 }
+
+meta_plot <- function(sm, smlcolors, meta.rescale = FALSE, xcoords = c(-250, 250),
+                      centralTend = "mean", dispersion = NULL,
+                      ylab = "Average Read Counts", xlab = "Distance from TSS",
+                      ylim = c(0, 0.15)) {
+  op <- par(mar = c(4, 5, 1, 1), xaxs = "i", yaxs = "i")
+  on.exit(par(op), add = TRUE)
+
+  plotMeta(
+    sm,
+    xcoords = xcoords,
+    meta.rescale = meta.rescale,
+    line.col = smlcolors[c(2, 6)],
+    centralTend = centralTend,
+    dispersion = dispersion,
+    xlab = xlab, ylab = ylab,
+    dispersion.col = smlcolors[c(1, 5)],
+    ylim = ylim,
+    xlim = xcoords,
+    cex.lab = 1.5, cex.axis = 1.2,
+    bty = "l"
+  )
+
+  legend(
+    "topright",
+    legend = names(sm),
+    lty = c(1, 1), lwd = c(2.5, 2.5),
+    col = smlcolors[c(2, 6)],
+    cex = 1.5,
+    bty = "n",
+    inset = 0.02
+  )
+}
+
 
 ## plot PRO-seq density around TSS and within gene body ##
 # metaplot
@@ -157,8 +192,6 @@ beta_down <- beta_tbl %>%
   filter(category == "Down") %>%
   pull(gene_id)
 
-paired_color <- RColorBrewer::brewer.pal(name = "Paired", n = 6)
-
 sm_pause <- ScoreMatrixList(
   target = GRangesList("Control" = bw_ctrl_bs, "Treated" = bw_trtd_bs),
   windows = bw_pause_ext, strand.aware = TRUE, weight.col = "score"
@@ -166,7 +199,12 @@ sm_pause <- ScoreMatrixList(
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_around_tss.png"),
-  plot_fun = meta_plot(sm_pause, paired_color, ylim = NULL, dispersion = "se")
+  plot_fun = meta_plot(sm_pause, paired_colors, ylim = NULL, dispersion = "se")
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_signal_around_tss.pdf"),
+  plot_fun = meta_plot(sm_pause, paired_colors, ylim = NULL, dispersion = "se")
 )
 
 sm_pause_up <-
@@ -178,7 +216,12 @@ sm_pause_up <-
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_around_tss_beta_up.png"),
-  plot_fun = meta_plot(sm_pause_up, paired_color, ylim = NULL, dispersion = "se")
+  plot_fun = meta_plot(sm_pause_up, paired_colors, ylim = NULL, dispersion = "se")
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_signal_around_tss_beta_up.pdf"),
+  plot_fun = meta_plot(sm_pause_up, paired_colors, ylim = NULL, dispersion = "se")
 )
 
 sm_pause_down <-
@@ -190,7 +233,12 @@ sm_pause_down <-
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_around_tss_beta_down.png"),
-  plot_fun = meta_plot(sm_pause_down, paired_color, ylim = NULL, dispersion = "se")
+  plot_fun = meta_plot(sm_pause_down, paired_colors, ylim = NULL, dispersion = "se")
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_signal_around_tss_beta_down.pdf"),
+  plot_fun = meta_plot(sm_pause_down, paired_colors, ylim = NULL, dispersion = "se")
 )
 
 sm_gb <- ScoreMatrixList(
@@ -201,11 +249,20 @@ sm_gb <- ScoreMatrixList(
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_within_genebody.png"),
-  plot_fun = meta_plot(sm_gb, paired_color,
+  plot_fun = meta_plot(sm_gb, paired_colors,
     xlab = "Bins within gene body",
     ylim = NULL, xcoords = c(0, 100), dispersion = "se"
   ),
   width = 800, height = 400
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_signal_within_genebody.pdf"),
+  plot_fun = meta_plot(sm_gb, paired_colors,
+    xlab = "Bins within gene body",
+    ylim = NULL, xcoords = c(0, 100), dispersion = "se"
+  ),
+  width = 12, height = 6
 )
 
 sm_gb_up <- ScoreMatrixList(
@@ -216,11 +273,20 @@ sm_gb_up <- ScoreMatrixList(
 
 save_png(
   file_name = file.path(result_dir, "proseq_signal_within_genebody_beta_up.png"),
-  plot_fun = meta_plot(sm_gb_up, paired_color,
+  plot_fun = meta_plot(sm_gb_up, paired_colors,
     xlab = "Bins within gene body",
     ylim = NULL, xcoords = c(0, 100), dispersion = "se"
   ),
   width = 800, height = 400
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_signal_within_genebody_beta_up.pdf"),
+  plot_fun = meta_plot(sm_gb_up, paired_colors,
+    xlab = "Bins within gene body",
+    ylim = NULL, xcoords = c(0, 100), dispersion = "se"
+  ),
+  width = 12, height = 6
 )
 
 if (length(beta_down) > 5) {
@@ -232,81 +298,102 @@ if (length(beta_down) > 5) {
 
   save_png(
     file_name = file.path(result_dir, "proseq_signal_within_genebody_beta_down.png"),
-    plot_fun = meta_plot(sm_gb_down, paired_color,
+    plot_fun = meta_plot(sm_gb_down, paired_colors,
       xlab = "Bins within gene body",
       ylim = NULL, xcoords = c(0, 100), dispersion = "se"
     ),
     width = 800, height = 400
+  )
+
+  save_pdf(
+    file_name = file.path(result_dir, "proseq_signal_within_genebody_beta_down.pdf"),
+    plot_fun = meta_plot(sm_gb_down, paired_colors,
+      xlab = "Bins within gene body",
+      ylim = NULL, xcoords = c(0, 100), dispersion = "se"
+    ),
+    width = 12, height = 6
   )
 }
 
 # heatmap
 # sm_pause_scaled <- scaleScoreMatrixList(sm_pause)
 sort_pause_site <- function(sml) {
-  sort_name <- names(sort(apply(sml[[1]]@.Data[, 251:501], MARGIN = 1, FUN = which.max)))
+  sort_name <-
+    names(sort(apply(sml[[1]]@.Data[, 251:501], MARGIN = 1, FUN = which.max)))
   return(as(lapply(sml, function(x) x@.Data[sort_name, ]), "ScoreMatrixList"))
+}
+
+plot_heatmap <- function(sm_pause) {
+  multiHeatMatrix(sort_pause_site(sm_pause),
+    xcoords = c(-250, 250),
+    col = RColorBrewer::brewer.pal("Reds", n = 9),
+    winsorize = c(0, 99), common.scale = TRUE, xlab = "Distance from TSS",
+    cex.axis = 0.8, cex.lab = 1.2
+  )
 }
 
 save_png(
   file_name = file.path(result_dir, "proseq_heatmap_around_tss.png"),
-  plot_fun = multiHeatMatrix(sort_pause_site(sm_pause),
-    xcoords = c(-250, 250),
-    col = RColorBrewer::brewer.pal("Reds", n = 9),
-    winsorize = c(0, 99), common.scale = TRUE, xlab = "Distance from TSS",
-    cex.axis = 0.8, cex.lab = 1.2
-  ),
+  plot_fun = plot_heatmap(sm_pause),
   width = 600, height = 600
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_heatmap_around_tss.pdf"),
+  plot_fun = plot_heatmap(sm_pause),
+  width = 6, height = 6
 )
 
 save_png(
   file_name = file.path(result_dir, "proseq_heatmap_around_tss_beta_up.png"),
-  plot_fun = multiHeatMatrix(sort_pause_site(sm_pause_up),
-    xcoords = c(-250, 250),
-    col = RColorBrewer::brewer.pal("Reds", n = 9),
-    winsorize = c(0, 99), common.scale = TRUE, xlab = "Distance from TSS",
-    cex.axis = 0.8, cex.lab = 1.2
-  ),
+  plot_fun = plot_heatmap(sm_pause_up),
   width = 600, height = 400
+)
+
+save_pdf(
+  file_name = file.path(result_dir, "proseq_heatmap_around_tss_beta_up.pdf"),
+  plot_fun = plot_heatmap(sm_pause_up),
+  width = 6, height = 6
 )
 
 if (length(beta_down) > 5) {
   save_png(
     file_name = file.path(result_dir, "proseq_heatmap_around_tss_beta_down.png"),
-    plot_fun = multiHeatMatrix(sort_pause_site(sm_pause_down),
-      xcoords = c(-250, 250),
-      col = RColorBrewer::brewer.pal("Reds", n = 9),
-      winsorize = c(0, 99), common.scale = TRUE, xlab = "Distance from TSS",
-      cex.axis = 0.8, cex.lab = 1.2
-    ),
+    plot_fun = plot_heatmap(sm_pause_down),
     width = 600, height = 600
+  )
+  save_pdf(
+    file_name = file.path(result_dir, "proseq_heatmap_around_tss_beta_down.pdf"),
+    plot_fun = plot_heatmap(sm_pause_down),
+    width = 6, height = 6
   )
 }
 
 save.image(file = file.path(result_dir, "data.RData"))
 
 # load(file.path(result_dir, "data.RData"))
-if (stringr::str_detect(omega_in, "chivu")) quit(save = "no", status = 0, runLast = FALSE)
+if (stringr::str_detect(chi_in, "chivu")) quit(save = "no", status = 0, runLast = FALSE)
 
 zeta <- 2000
 
-theme_set(cowplot::theme_cowplot())
-
 # visualize some interesting tf targets
-omega_tbl <- read_csv(omega_in, show_col_types = FALSE)
+chi_tbl <- read_csv(chi_in, show_col_types = FALSE)
 # plot genes with changes
 beta_down <- beta_tbl %>%
-  arrange(padj) %>%
+  arrange(padj_beta) %>%
   filter(category == "Down") %>%
   pull(gene_id)
 beta_up <- beta_tbl %>%
-  arrange(padj) %>%
+  arrange(padj_beta) %>%
   filter(category == "Up") %>%
   pull(gene_id)
 
 count_region <- c(bw_pause_filtered, bw_gb_filtered)
 
 # functions for gviz plots
-gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
+gviz_plot <- function(gene_sel, extend_region, category,
+                      dir = "beta", pause_peak = FALSE,
+                      zeta1 = 20, zeta2 = 100) {
   make_data_track <- function(bw, bsize, s, chrom, condition) {
     data_track <- Gviz::DataTrack(
       range = bw,
@@ -316,7 +403,8 @@ gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
       name = paste0(condition, " (", s, ")"),
       col = strand_col[s],
       strand = s,
-      chromosome = chrom
+      chromosome = chrom,
+      background.title = "white", col.title = "grey85", col.axis = "grey85"
     )
     return(data_track)
   }
@@ -359,12 +447,19 @@ gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
   tx_track <-
     GeneRegionTrack(region_gn,
       name = "Gene", shape = "arrow",
-      chromosome = seqnames(gene_tx[1])
+      chromosome = seqnames(gene_tx[1]),
+      background.title = "white", col.title = "grey85", col.axis = "grey85",
+      fill = paired_colors[4], col = paired_colors[4]
     )
-  count_track <-
-    AnnotationTrack(subsetByOverlaps(count_region, gene_range), shape = "box")
 
-  strand_col <- c(`+` = "blue", `-` = "red")
+  count_track <-
+    AnnotationTrack(subsetByOverlaps(count_region, gene_range),
+      shape = "box",
+      background.title = "white", col.title = "grey85", col.axis = "grey85",
+      fill = paired_colors[3], col = paired_colors[3]
+    )
+
+  strand_col <- c(`+` = scatter_colors[1], `-` = scatter_colors[3])
   bsize <- 10
 
   ctrl_bwp <- subsetByOverlaps(bw_ctrl$bwp, bw_range)
@@ -375,10 +470,14 @@ gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
   trtd_bwm <- subsetByOverlaps(bw_trtd$bwm, bw_range)
   trtd_bwm$score <- abs(trtd_bwm$score)
 
-  ctrl_plus <- make_data_track(ctrl_bwp, bsize, "+", seqnames(gene_tx[1]), condition = "Control")
-  ctrl_minus <- make_data_track(ctrl_bwm, bsize, "-", seqnames(gene_tx[1]), condition = "Control")
-  trtd_plus <- make_data_track(trtd_bwp, bsize, "+", seqnames(gene_tx[1]), condition = "Treated")
-  trtd_minus <- make_data_track(trtd_bwm, bsize, "-", seqnames(gene_tx[1]), condition = "Treated")
+  ctrl_plus <-
+    make_data_track(ctrl_bwp, bsize, "+", seqnames(gene_tx[1]), condition = "Control")
+  ctrl_minus <-
+    make_data_track(ctrl_bwm, bsize, "-", seqnames(gene_tx[1]), condition = "Control")
+  trtd_plus <-
+    make_data_track(trtd_bwp, bsize, "+", seqnames(gene_tx[1]), condition = "Treated")
+  trtd_minus <-
+    make_data_track(trtd_bwm, bsize, "-", seqnames(gene_tx[1]), condition = "Treated")
 
   # Use rolling mean to determine ylim
   ylim <-
@@ -389,15 +488,59 @@ gviz_plot <- function(gene_sel, extend_region, category, dir = "beta") {
       }
     )))
 
-  save_png(file.path(fig_dir, dir, category, paste0(gene_sel, ".png")),
+  # save_png(file.path(fig_dir, dir, category, paste0(gene_sel, ".png")),
+  #   plotTracks(
+  #     c(
+  #       list(axis_track, tx_track, count_track),
+  #       map(
+  #         list(ctrl_plus, ctrl_minus, trtd_plus, trtd_minus),
+  #         set_datatrack_ylim, c(0, ylim)
+  #       )
+  #     )
+  #   ),
+  #   width = 600, height = 400
+  # )
+
+  save_pdf(file.path(fig_dir, dir, category, paste0(gene_sel, ".pdf")),
     plotTracks(
       c(
         list(axis_track, tx_track, count_track),
-        map(list(ctrl_plus, ctrl_minus, trtd_plus, trtd_minus), set_datatrack_ylim, c(0, ylim))
+        map(
+          list(ctrl_plus, ctrl_minus, trtd_plus, trtd_minus),
+          set_datatrack_ylim, c(0, ylim)
+        )
       )
     ),
-    width = 600, height = 400
+    width = 5, height = 5
   )
+
+  # plot pause peak if needed
+  if (pause_peak) {
+    pause_region <- subsetByOverlaps(count_region, gene_range)
+    pause_region <- pause_region[which.min(width(pause_region))]
+
+    save_pdf(
+      file.path(fig_dir, dir, category, paste0(gene_sel, "_pause.pdf")),
+      plotTracks(
+        c(
+          list(axis_track, tx_track, count_track),
+          purrr::map(
+            list(ctrl_plus, ctrl_minus, trtd_plus, trtd_minus),
+            set_datatrack_ylim, c(0, ylim)
+          )
+        ),
+        from = ifelse(strand(pause_region) == "+",
+          start(pause_region) - zeta1,
+          end(pause_region) - zeta2
+        ),
+        to = ifelse(strand(pause_region) == "+",
+          start(pause_region) + zeta2,
+          end(pause_region) + zeta1
+        )
+      ),
+      width = 2, height = 5
+    )
+  }
 }
 
 # the most significant genes
@@ -411,68 +554,73 @@ for (gene_sel in beta_down[1:10]) {
 
 # plots for gene may be driven by initiation or pause-escape
 rate_tbl <- beta_tbl %>%
-  select(gene_id, beta1, beta2, category, t_stats, lfc, padj) %>%
-  left_join(omega_tbl %>% select(gene_id, chi1, chi2, category, t_stats, lfc, padj),
-    by = "gene_id", suffix = c("_beta", "_omega")
+  select(gene_id, beta1, beta2, category, t_stats_beta, lfc, padj_beta) %>%
+  left_join(chi_tbl %>%
+    select(gene_id, chi1, chi2, category, t_stats, lfc, padj) %>%
+    dplyr::rename(
+      t_stats_chi = t_stats,
+      padj_chi = padj
+    ),
+  by = "gene_id", suffix = c("_beta", "_chi")
   )
 
-beta_up_omega_up <- rate_tbl %>%
-  filter(category_beta == "Up", category_omega == "Up") %>%
-  arrange(desc(t_stats_omega)) %>%
+beta_up_chi_up <- rate_tbl %>%
+  filter(category_beta == "Up", category_chi == "Up") %>%
+  arrange(desc(t_stats_chi)) %>%
   slice_head(n = 20) %>%
   pull(gene_id)
 
-if (length(beta_up_omega_up) > 0) {
-  for (gene_sel in beta_up_omega_up) {
-    gviz_plot(gene_sel, 5000, "beta_up_omega_up", dir = "combine")
+if (length(beta_up_chi_up) > 0) {
+  for (gene_sel in beta_up_chi_up) {
+    gviz_plot(gene_sel, 5000, "beta_up_chi_up", dir = "combine")
   }
 }
 
-beta_down_omega_down <- rate_tbl %>%
-  filter(category_beta == "Down", category_omega == "Down") %>%
-  arrange(desc(t_stats_omega)) %>%
+beta_down_chi_down <- rate_tbl %>%
+  filter(category_beta == "Down", category_chi == "Down") %>%
+  arrange(desc(t_stats_chi)) %>%
   slice_head(n = 20) %>%
   pull(gene_id)
 
-if (length(beta_down_omega_down) > 0) {
-  for (gene_sel in beta_down_omega_down) {
-    gviz_plot(gene_sel, 5000, "beta_down_omega_down", dir = "combine")
+if (length(beta_down_chi_down) > 0) {
+  for (gene_sel in beta_down_chi_down) {
+    gviz_plot(gene_sel, 5000, "beta_down_chi_down", dir = "combine")
   }
 }
 
-beta_others_omega_up <- rate_tbl %>%
-  filter(category_beta == "Others", category_omega == "Up") %>%
-  arrange(desc(t_stats_omega)) %>%
+beta_others_chi_up <- rate_tbl %>%
+  filter(category_beta == "Others", category_chi == "Up") %>%
+  arrange(desc(t_stats_chi)) %>%
   slice_head(n = 20) %>%
   pull(gene_id)
 
-if (length(beta_others_omega_up) > 0) {
-  for (gene_sel in beta_others_omega_up) {
-    gviz_plot(gene_sel, 5000, "beta_others_omega_up", dir = "combine")
+if (length(beta_others_chi_up) > 0) {
+  for (gene_sel in beta_others_chi_up) {
+    gviz_plot(gene_sel, 5000, "beta_others_chi_up", dir = "combine")
   }
 }
 
-beta_others_omega_down <- rate_tbl %>%
-  filter(category_beta == "Others", category_omega == "Down") %>%
-  arrange(desc(t_stats_omega)) %>%
+beta_others_chi_down <- rate_tbl %>%
+  filter(category_beta == "Others", category_chi == "Down") %>%
+  arrange(desc(t_stats_chi)) %>%
   slice_head(n = 20) %>%
   pull(gene_id)
 
-if (length(beta_others_omega_down) > 0) {
-  for (gene_sel in beta_others_omega_down) {
-    gviz_plot(gene_sel, 5000, "beta_others_omega_down", dir = "combine")
+if (length(beta_others_chi_down) > 0) {
+  for (gene_sel in beta_others_chi_down) {
+    gviz_plot(gene_sel, 5000, "beta_others_chi_down", dir = "combine")
   }
 }
 
-beta_down_omega_up <- rate_tbl %>%
-  filter(category_beta == "Down", category_omega == "Up") %>%
-  arrange(desc(t_stats_omega)) %>%
+beta_down_chi_up <- rate_tbl %>%
+  filter(category_beta == "Down", category_chi == "Up") %>%
+  arrange(desc(t_stats_chi)) %>%
   slice_head(n = 20) %>%
   pull(gene_id)
 
-if (length(beta_down_omega_up) > 0) {
-  for (gene_sel in beta_down_omega_up) {
-    gviz_plot(gene_sel, 5000, "beta_down_omega_up", dir = "combine")
+if (length(beta_down_chi_up) > 0) {
+  for (gene_sel in beta_down_chi_up) {
+    gviz_plot(gene_sel, 5000, "beta_down_chi_up", dir = "combine")
   }
 }
 
@@ -482,19 +630,30 @@ sel_genes <-
     "ENSG00000099194", "ENSG00000132182",
     "ENSG00000133454", "ENSG00000139793",
     "ENSG00000110958", "ENSG00000170606",
-    "ENSG00000144381", "ENSG00000151929"
+    "ENSG00000144381", "ENSG00000151929",
+    "ENSG00000163874", "ENSG00000010256"
   )
 
 for (gene_sel in sel_genes) {
-  try(gviz_plot(gene_sel, 5000, "select", dir = "combine"))
+  try(gviz_plot(gene_sel, 1000, "select", dir = "combine"))
 }
+
+try(gviz_plot("ENSG00000163874", 1000, "select",
+  dir = "combine", pause_peak = TRUE,
+  zeta1 = 20, zeta2 = 100
+))
+
+try(
+  gviz_plot("ENSG00000010256", 1000, "select",
+    dir = "combine", pause_peak = TRUE,
+    zeta1 = 20, zeta2 = 200
+  )
+)
 
 # lfc scatter plot
 rate_tbl %>%
-  count(category_beta, category_omega) %>%
-  pivot_wider(id_cols = category_omega, names_from = category_beta, values_from = n)
-
-theme_set(cowplot::theme_cowplot())
+  count(category_beta, category_chi) %>%
+  pivot_wider(id_cols = category_chi, names_from = category_beta, values_from = n)
 
 sel_symbol <-
   AnnotationDbi::select(org.Hs.eg.db,
@@ -506,17 +665,17 @@ gene_tbl <- rate_tbl %>%
   filter(gene_id %in% sel_genes) %>%
   left_join(sel_symbol, by = c("gene_id" = "ENSEMBL"))
 
-gene_tbl %>% select(SYMBOL, lfc_omega, padj_omega, lfc_beta, padj_beta)
+gene_tbl %>% select(SYMBOL, lfc_chi, padj_chi, lfc_beta, padj_beta)
 
 p <- rate_tbl %>%
-  ggplot(aes(x = lfc_omega, y = lfc_beta)) +
+  ggplot(aes(x = lfc_chi, y = lfc_beta)) +
   geom_pointdensity() +
   scale_color_viridis() +
   geom_hline(yintercept = 0, color = "gray", linetype = "dashed") +
   geom_vline(xintercept = 0, color = "gray", linetype = "dashed") +
   # geom_abline(slope = 1) +
   stat_cor() +
-  geom_point(data = gene_tbl, aes(x = lfc_omega, y = lfc_beta), color = "red") +
+  geom_point(data = gene_tbl, aes(x = lfc_chi, y = lfc_beta), color = "red") +
   # geom_text(data = gene_tbl, aes(label=SYMBOL), size=3) +
   ggrepel::geom_text_repel(
     data = gene_tbl, aes(label = SYMBOL),
@@ -529,7 +688,7 @@ p <- rate_tbl %>%
   ylim(-6, 6) +
   xlim(-5, 7)
 
-ggsave(file.path(result_dir, "lfc_alpha_vs_beta_density.png"),
+ggsave(file.path(result_dir, "lfc_chi_vs_beta_density.png"),
   plot = p,
   width = 7, height = 5
 )

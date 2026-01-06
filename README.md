@@ -1,7 +1,7 @@
 ---
 TITLE: "Unimod Pausing Analysis"
 AUTHORS: "Yixin Zhao; Xin Zeng"
-DATE: 2025-11-17
+DATE: 2026-01-06
 ---
 
 # Unimod pausing analysis
@@ -14,10 +14,12 @@ This repository contains the Snakemake workflow, metadata, and R scripts used to
 | --- | --- |
 | `Snakefile` | Entry point that loads metadata/configuration, sets up helper functions, and includes the modular rule files. |
 | `rules/` | Snakemake rule collections for PRO-seq preprocessing (`proseq.smk`), unimod pause-release modeling (`unimod.smk`), and simulation post-processing (`simulation.smk`). |
-| `scripts/` | R and bash helpers invoked by the rules (pipeline wrappers, statistical models, visualization scripts). |
-| `metadata/` | CSV tables describing experiments, spike-ins, parameter grids, and simulation settings that populate Snakemake wildcards. |
+| `scripts/` | R and bash helpers invoked by the rules (PRO-seq wrapper, active TSS calling, statistical models, simulation visualizations). |
+| `metadata/` | CSV tables describing experiments (`metadata_aoi.csv`), contrasts (`metadata_comparison.csv`), PRO-cap samples (`copro_sample.csv`), spike-in scaling (`scaling_factor.csv`), and simulation parameter grids. |
 | `config.yml` | Paths to references (genomes, annotations) and analysis parameters (window sizes, gene filters, etc.). |
-| `environment.yml` | Conda environment mixing Python tooling (Snakemake, numpy/pandas) with the R/Bioconductor stack and command-line genomics utilities. |
+| `environment.yml` | Conda environment mixing Python tooling (Snakemake, numpy/pandas) with the R/Bioconductor stack and command-line genomics utilities (bwa, bedtools, CrossMap, PRO-seq 2.0 dependencies). |
+| `ext_data/` | Expected location for genomes, chain files, and PRO-cap bigWigs (currently symlinks to external paths). |
+| `outputs/`, `tmp/`, `indicator/` | Generated results, intermediates, and completion markers created by the workflow. |
 | `ms/` | Manuscript notes such as `pausedRNAP_nucleosome_quotes.md`. |
 
 ## Pipeline overview
@@ -33,24 +35,27 @@ The `Snakefile` orchestrates the complete analysis by:
 
 ## Scripts directory
 
-* `scripts/proseq/`: PRO-seq 2.0 wrapper plus helper R scripts for active TSS detection (`find_active_tss_DLD1.R`) and transcript processing.
-* `scripts/unimod/`: Core statistical routines, including `analyze_one_sample_poisson_pause_release.R`, `analyze_two_samples_DLD1.R`, expectation-maximization helpers, and `visualize_two_samples.R` for figure panels.
-* `scripts/simulation/`: Post-processing utilities for simulation RDS files, coverage matching, and generation of supplemental figure tables.
+* `scripts/proseq/`: PRO-seq 2.0 wrapper (`proseq2.0.bsh`) plus helper R scripts for transcript processing and active TSS detection (`find_active_tss_DLD1.R`).
+* `scripts/unimod/`: Core statistical routines, including `analyze_one_sample_poisson_pause_release.R`, `analyze_two_samples_DLD1.R`, EM helpers, counting-region generation, and visualization (`visualize_two_samples.R`).
+* `scripts/simulation/`: Post-processing utilities for simulation RDS files, coverage matching, LRT summaries, and BW visualizations.
 
 ## Metadata and configuration tips
 
 * Update `config.yml` with absolute paths to your reference genomes, chromosome sizes, annotation GTF, and analysis-specific filters before running Snakemake.
-* Inspect the CSV schemas in `metadata/` to understand how assays, groups, references, and spike-in scaling factors are encoded. These tables drive wildcard resolution everywhere in the workflow.
+* Inspect the CSV schemas in `metadata/` to understand how assays, groups, references, spike-in scaling factors, and simulation grids are encoded. These tables drive wildcard resolution everywhere in the workflow.
 * Create the conda environment via `conda env create -f environment.yml` (or `mamba env create ...`) so both Python and R dependencies match the expected versions.
 
 ## Getting started
 
 1. **Dry-run the workflow:** after editing `config.yml`, run `snakemake -np` to inspect the dependency graph without executing heavy jobs.
-2. **Trace a rule end-to-end:** e.g., follow `rules/unimod.smk:analyze_one_sample_pause_release` into its corresponding R script to see how pause-release rates are estimated.
-3. **Review visualization scripts:** use `scripts/unimod/visualize_two_samples.R` to understand how figure panels (e.g., Figure XXXX) are composed from the processed outputs.
-4. **Check manuscript mappings:** figures.md documented which scripts generate each figure; keep those references handy when recreating panels in Inkscape or IGV.
+2. **Run the workflow:** `snakemake --cores 4` (adjust cores as needed); targets default to `rule all` defined in `Snakefile`.
+3. **Trace a rule end-to-end:** e.g., follow `rules/unimod.smk:analyze_one_sample_pause_release` into `scripts/unimod/analyze_one_sample_poisson_pause_release.R` to see how pause-release rates are estimated.
+4. **Review visualization scripts:** use `scripts/unimod/visualize_two_samples.R` to understand how figure panels are composed from processed outputs.
+5. **Check manuscript mappings:** `figures.md` documents which scripts generate each figure; keep those references handy when recreating panels.
 
 ## Additional notes
 
 * Supplemental figures combine Snakemake outputs with manual layout steps in Inkscape and IGV.
 * Temporary outputs under `tmp/` can be safely removed between runs; Snakemake will regenerate them as needed.
+* Simulation rules expect pre-existing inputs under `outputs/simulation/data_lrt/` and `outputs/simulation/data_fk/`; acquisition/generation of those inputs is TODO to document.
+* `ext_data/copro/hg19/*.bw` and `ext_data/chain/hg19ToHg38.over.chain.gz` are required for PRO-cap liftover; ensure these exist or symlink to their locations.

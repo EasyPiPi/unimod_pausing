@@ -59,6 +59,7 @@ dependencies:
 - r-ggally
 - r-gganimate
 - r-ggbeeswarm # swarmplot
+- r-ggextra
 - r-ggh4x # ggplot2 extension package
 - r-ggnewscale # GSEA plot
 - r-ggpointdensity
