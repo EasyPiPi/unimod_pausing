@@ -1,7 +1,7 @@
 ---
 TITLE: "Unimod Pausing Analysis"
 AUTHORS: "Yixin Zhao; Xin Zeng"
-DATE: 2026-01-06
+DATE: 2026-06-08
 ---
 
 # Unimod pausing analysis
@@ -18,6 +18,7 @@ This repository contains the Snakemake workflow, metadata, and R scripts used to
 | `metadata/` | CSV tables describing experiments (`metadata_aoi.csv`), contrasts (`metadata_comparison.csv`), PRO-cap samples (`copro_sample.csv`), spike-in scaling (`scaling_factor.csv`), and simulation parameter grids. |
 | `config.yml` | Paths to references (genomes, annotations) and analysis parameters (window sizes, gene filters, etc.). |
 | `environment.yml` | Conda environment mixing Python tooling (Snakemake, numpy/pandas) with the R/Bioconductor stack and command-line genomics utilities (bwa, bedtools, CrossMap, PRO-seq 2.0 dependencies). |
+| `analysis/` | Downstream analysis scripts used to reproduce the main and supplementary figures presented in the manuscript. |
 | `ext_data/` | Expected location for genomes, chain files, and PRO-cap bigWigs (currently symlinks to external paths). |
 | `outputs/`, `tmp/`, `indicator/` | Generated results, intermediates, and completion markers created by the workflow. |
 | `ms/` | Manuscript notes such as `pausedRNAP_nucleosome_quotes.md`. |
@@ -59,3 +60,9 @@ The `Snakefile` orchestrates the complete analysis by:
 * Temporary outputs under `tmp/` can be safely removed between runs; Snakemake will regenerate them as needed.
 * Simulation rules expect pre-existing inputs under `outputs/simulation/data_lrt/` and `outputs/simulation/data_fk/`; acquisition/generation of those inputs is TODO to document.
 * `ext_data/copro/hg19/*.bw` and `ext_data/chain/hg19ToHg38.over.chain.gz` are required for PRO-cap liftover; ensure these exist or symlink to their locations.
+
+## Citation
+If you use this repository, please cite:
+Zeng X, Barshad G, Hassett R, Rice EJ, Danko CG, Siepel A, Zhao Y.
+*A comparative analysis of promoter-proximal pausing reveals kinetic and distributional dimensions of variation.* bioRxiv (2026).
+Preprint: https://www.biorxiv.org/content/10.64898/2026.06.01.729264v1
