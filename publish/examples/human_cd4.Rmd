@@ -1,0 +1,423 @@
+---
+title: "STADyUM Tutorial: Estimating Transcription Rates from Human CD4+ PRO-seq Data"
+author: "Xin Zeng"
+date: "2026/06/02"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    toc_depth: 3
+---
+
+# Introduction
+
+This tutorial walks through a complete analysis of human CD4+ T cell PRO-seq data
+using the **STADyUM** package. STADyUM models RNA Polymerase II (Pol II) dynamics
+by jointly estimating pause release and elongation kinetics from the read distribution
+across promoter-proximal pause sites and gene bodies.
+
+STADyUM estimates four key parameters per gene:
+
+- **beta (β)**: the pause release rate — how quickly Pol II exits the
+  promoter-proximal paused state. Higher beta means faster pause release.
+- **chi (χ)**: a measure of overall transcriptional activity, proportional to
+  both the initiation rate and elongation rate.
+- **fkMean (μ)**: the mean elongation time across the gene body, reflecting
+  average Pol II speed.
+- **fkSD (σ)**: the standard deviation of elongation time, capturing variability
+  in Pol II speed. Genes fall into two groups — "Sharp" (low σ, homogeneous speed)
+  and "Broad" (high σ, heterogeneous speed).
+
+In this tutorial we will:
+
+1. Load TSS annotations and select one representative TSS per gene.
+2. Build promoter-proximal pause and gene body read-counting regions.
+3. Run `estimateTranscriptionRates()` to estimate β, χ, μ, and σ.
+4. Post-process estimates and classify genes by quantile groups.
+5. Visualize relationships among estimated parameters.
+6. Relate β to +1 nucleosome occupancy using Micro-C 1D signal.
+7. Relate β to promoter histone modification levels (H3K4me3, H3K27ac).
+
+---
+
+# Setup
+
+## Load Required Libraries
+
+```{r setup, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(
+  message   = FALSE,
+  warning   = FALSE,
+  fig.align = "center"
+)
+
+library(STADyUM)
+library(GenomicRanges)
+library(plyranges)
+library(dplyr)
+library(tidyverse)
+library(pracma)          # findpeaks() used in find_valley_threshold()
+library(ggpointdensity)
+library(cowplot)
+library(patchwork)
+library(RColorBrewer)
+library(genomation)      # ScoreMatrix() for nucleosome signal extraction
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(rtracklayer)     # import.bw() for ENCODE bigWig files
+library(ggpubr)          # stat_compare_means() for histone boxplots
+```
+
+## Configure Paths
+
+All paths are derived from `PROJECT_ROOT`. Set that environment variable — or
+update `root_dir` — to point to your local copy of the project. `load_config.R`
+populates `.paths` with the standard sub-directories used throughout the pipeline.
+
+```{r paths}
+root_dir <- normalizePath(
+  Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
+  mustWork = FALSE)
+source(file.path(root_dir, "codes", "publish", "load_config.R"))
+
+# Helper functions shared across tutorial sections
+source(file.path(root_dir, "codes", "publish", "examples", "helper_function.R"))
+
+# ── Required input files ───────────────────────────────────────────────────────
+# TSN: GRanges of detected transcription start sites with PRO-seq signal scores
+tsn_file <- file.path(.paths$data, "proseq/tidgrng/PROseq-HUMAN-CD4_tsn.RDS")
+
+# TQ: transcript annotation used to derive 3'-end (TTS) positions
+tq_file  <- file.path(.paths$data, "proseq/tq/HUMAN.RDS")
+
+# Stranded PRO-seq bigWig files (5'-end read density at nucleotide resolution)
+bw_plus  <- file.path(.paths$data, "proseq/bigwig/p3/PROseq-HUMAN-CD4_plus.bw")
+bw_minus <- file.path(.paths$data, "proseq/bigwig/p3/PROseq-HUMAN-CD4_minus.bw")
+
+# ── Optional external files ────────────────────────────────────────────────────
+# Micro-C 1D contact signal for +1 nucleosome analysis
+ns_signal_file <- file.path(.paths$microc_1d, "human_cd4_1d_signal.bed")
+
+# ENCODE histone modification metadata (produced by the singleCellType pipeline)
+histone_meta_file <- file.path(.paths$data, "encode/meta_fc.RDS")
+
+# Flags used to skip optional sections when external files are absent
+run_nucleosome <- file.exists(ns_signal_file)
+run_histone    <- file.exists(histone_meta_file)
+
+# ── Output directory ───────────────────────────────────────────────────────────
+# Only the main STADyUM rate object is saved; intermediate objects are not.
+rate_dir <- file.path(.paths$outputs,
+                      "publish/singleCellType/1_transcriptionRate/human")
+dir.create(rate_dir, recursive = TRUE, showWarnings = FALSE)
+```
+
+---
+
+# Load and Prepare TSS Annotations
+
+## Load the TSN File
+
+The TSN file is a `GRanges` object of detected transcription start sites. Each
+range is linked to a gene via `ensembl_gene_id`. The `score` column reflects the
+PRO-seq signal at that position; only sites with score ≥ 5 will be used in
+downstream region construction.
+
+```{r load-tsn}
+cd4_tsn <- readRDS(tsn_file)
+head(as.data.frame(cd4_tsn)[, c("seqnames", "start", "end", "strand",
+                                 "ensembl_gene_id", "score")], 5)
+```
+
+## Select the Most Upstream TSS per Gene
+
+Genes can have multiple annotated TSSs from alternative promoters. We keep only
+the most upstream TSS per gene to provide a single, unambiguous anchor for each
+locus. "Most upstream" is defined as the smallest coordinate on the `+` strand
+and the largest on the `−` strand.
+
+```{r keep-upstream-tss}
+cd4_tsn <- keep_upstream_tss(cd4_tsn)
+cat("TSS sites retained:", length(cd4_tsn), "\n")
+```
+
+---
+
+# Build Read-Count Regions
+
+STADyUM requires two counting windows per gene:
+
+- **Pause region**: a 200 bp window starting at the TSS, capturing
+  promoter-proximal paused Pol II.
+- **Gene body region**: the span from the TSS to the transcription termination
+  site (TTS), trimmed by 2000 bp at each end to exclude the pause peak and
+  3'-processing signal. Only genes with a trimmed body ≥ 6000 bp are kept.
+
+TSN sites with a PRO-seq score below 5 are excluded as unreliable anchors.
+
+```{r build-regions}
+tq     <- readRDS(tq_file)
+region <- build_readcount_regions(cd4_tsn, tq@transcripts)
+
+cat("Pause regions:     ", length(region$pause),    "\n")
+cat("Gene body regions: ", length(region$gene_body), "\n")
+```
+
+---
+
+# Estimate Transcription Rates
+
+`estimateTranscriptionRates()` counts PRO-seq reads in each pause and gene body
+window and fits the STADyUM kinetic model. The function returns a `STADyUM`
+object containing per-gene estimates of β, χ, μ, and σ.
+
+```{r run-stadyum}
+cd4_rate <- estimateTranscriptionRates(
+  bw_plus, bw_minus,
+  region$pause, region$gene_body,
+  "CD4"
+)
+cat("Genes with rate estimates:", nrow(rates(cd4_rate)), "\n")
+```
+
+---
+
+# Post-Process Estimated Rates
+
+We add three pieces of metadata to the rates table:
+
+- **betaGroup / fkMeanGroup / chiGroup**: quintile (Q1–Q5) or tertile
+  (Low / Medium / High) labels for each parameter.
+- **fkSD**: elongation time standard deviation, computed as
+  $\sigma = \sqrt{\text{fkVar}}$.
+- **sdGroup**: Sharp / Broad classification. The fkSD histogram is bimodal;
+  `process_sample_rate()` finds the valley between the two peaks and uses it
+  as the class boundary.
+
+```{r post-process}
+cd4_rate@rates <- process_sample_rate(rates(cd4_rate))
+```
+
+## Save STADyUM Output
+
+The estimated rate object is saved as an RDS file. It can be loaded in
+downstream analyses (between-cell-type comparisons, species comparisons, etc.)
+without re-running the estimation step.
+
+```{r save-rates}
+saveRDS(cd4_rate, file.path(rate_dir, "cd4_rate.RDS"))
+cat("Saved:", file.path(rate_dir, "cd4_rate.RDS"), "\n")
+```
+
+The saved object contains:
+
+- `rates(cd4_rate)`: per-gene data frame with β, χ, μ, σ, and group labels.
+- `@pauseRegions`: the 200 bp counting windows used.
+- `@counts`: raw pause and gene body read counts.
+
+---
+
+# Visualize Parameter Relationships
+
+```{r extract-rates}
+cd4_rate_df <- rates(cd4_rate)
+```
+
+## β vs χ
+
+Each point is one gene. β and χ are positively correlated: genes with faster
+pause release tend to have higher overall transcriptional output, consistent
+with coupled regulation of promoter pausing and transcription initiation.
+
+```{r beta-chi, fig.width=4, fig.height=3.5}
+plot_beta_vs_chi(
+  cd4_rate_df,
+  label_x = -3.5, label_y = -3.8,
+  xlim    = c(-6, -1),
+  ylim    = c(-4, 1)
+)
+```
+
+## β vs σ
+
+The 2D density plot reveals two gene populations. The horizontal dashed line
+marks the Sharp / Broad boundary identified from the bimodal fkSD histogram.
+Sharp genes (below the line) have homogeneous Pol II elongation speed; Broad
+genes (above the line) have more variable elongation.
+
+```{r beta-sigma, fig.width=4.5, fig.height=4,dev='png'}
+#plot_beta_vs_sigma_density(cd4_rate_df)
+```
+
+## μ vs σ
+
+Genes with longer mean elongation times (high μ) tend to have greater
+elongation-speed variability (high σ), further reflecting the Sharp / Broad
+structure.
+
+```{r mu-sigma, fig.width=4, fig.height=3.5}
+plot_fkMean_vs_fkSD(cd4_rate_df)
+```
+
+---
+
+# +1 Nucleosome Occupancy
+
+The +1 nucleosome sits just downstream of the TSS and influences Pol II pausing.
+We use Micro-C 1D contact signal as a proxy for nucleosome occupancy and ask
+whether β predicts +1 nucleosome positioning.
+
+We center a 2000 bp window around each TSS, extract the Micro-C signal from the
+1D contact file, and apply a LOESS smooth (span = 0.05) to each row to reduce
+positional noise while preserving the +1 peak shape.
+
+```{r nucleosome-skip, echo=FALSE, eval=!run_nucleosome}
+cat("Micro-C 1D signal file was not found,",
+    "so the nucleosome section is skipped in this demo.\n")
+```
+
+```{r build-nucleosome-matrix, eval=run_nucleosome}
+# Human seqinfo required by ScoreMatrix for chromosome-level range validation
+seqlevelsStyle(TxDb.Hsapiens.UCSC.hg38.knownGene) <- "Ensembl"
+seqinfo_human <- seqinfo(TxDb.Hsapiens.UCSC.hg38.knownGene)
+
+ns_matrix <- get_matrix_from_nucleosome_signal(cd4_rate, ns_signal_file, seqinfo_human)
+
+# Attach rate metadata (betaGroup, sdGroup, chiGroup) to the matrix object
+ns_matrix$rate_df <- cd4_rate@rates
+
+# Relabel chi tertiles for display
+ns_matrix$rate_df$chiGroup <- factor(
+  ns_matrix$rate_df$chiGroup,
+  levels = levels(ns_matrix$rate_df$chiGroup),
+  labels = c("Low expression", "Medium expression", "High expression")
+)
+cat("Nucleosome matrix dimensions:", dim(ns_matrix$smooth), "\n")
+```
+
+## β groups stratified by expression level
+
+Each panel corresponds to one expression (χ) tertile; lines are colored by β
+quintile (Q1 = slowest, Q5 = fastest pause release). Higher-β genes tend to
+show a sharper +1 nucleosome peak, consistent with faster pause release being
+associated with more organized chromatin downstream of the TSS.
+
+```{r plot-beta-nucleosome, eval=run_nucleosome, fig.width=8, fig.height=3}
+make_microc_profile_plot(ns_matrix, group_col = "betaGroup", class_col = "chiGroup")
+```
+
+## σ groups (Sharp vs Broad) stratified by expression level
+
+Green = Sharp (low σ), purple = Broad (high σ). Sharp genes consistently show
+a higher and more localized +1 nucleosome peak across all expression levels,
+suggesting that homogeneous Pol II elongation speed correlates with well-positioned
+nucleosomes.
+
+```{r plot-sigma-nucleosome, eval=run_nucleosome, fig.width=8, fig.height=3}
+sd_color <- c("#1b9e77", "#762a83")
+
+make_microc_profile_plot(
+  ns_matrix,
+  group_col    = "sdGroup",
+  class_col    = "chiGroup",
+  colors       = sd_color,
+  legend_title = expression(sigma ~ group)
+)
+```
+
+---
+
+# Histone Modifications
+
+H3K4me3 marks active promoters and H3K27ac marks active regulatory elements.
+We use ENCODE ChIP-seq fold-change bigWig files for CD4+ T cells to ask whether
+β is associated with promoter histone modification levels, above and beyond what
+is explained by overall expression (χ).
+
+For each gene we define a 500 bp window centered on its TSS and compute the
+mean ChIP-seq signal within that window.
+
+```{r histone-skip, echo=FALSE, eval=!run_histone}
+cat("Histone metadata file was not found,",
+    "so the histone modification section is skipped in this demo.\n")
+```
+
+```{r histone-analysis, eval=run_histone}
+HISTONE_MARKS <- c("H3K4me3", "H3K27ac")
+CHI_LABELS    <- c("Low expression", "Medium expression", "High expression")
+
+# Load ENCODE metadata and update bigWig paths to the local data directory
+meta_fc     <- readRDS(histone_meta_file)
+meta_fc$bw  <- file.path(.paths$encode_bw, basename(meta_fc$bw))
+meta_cd4    <- meta_fc %>%
+  filter(Biosample == "CD4 regulatory", Target %in% HISTONE_MARKS)
+
+# Build 500 bp promoter windows and overlap with H3K4me3 / H3K27ac bigWigs
+promoter        <- get_promoter_df_from_stadyum_obj(cd4_rate, promoter_len = 500)
+promoter$df     <- get_histone_modification_sum(promoter$df, promoter$grang, meta_cd4)
+levels(promoter$df$chiGroup) <- CHI_LABELS
+```
+
+## β vs H3K4me3
+
+Within each expression tertile, genes with higher β carry significantly more
+H3K4me3 at their promoters, linking faster pause release to a more active
+promoter chromatin state.
+
+```{r plot-h3k4me3, eval=run_histone, fig.width=8, fig.height=2.5}
+plot_histone_boxplot(promoter$df, "H3K4me3", ylim = c(2, 9), label_x = 1.5)
+```
+
+## β vs H3K27ac
+
+H3K27ac shows a similar trend: higher-β genes have more H3K27ac signal at their
+promoters across all expression levels, further supporting the association
+between fast pause release and an open, active chromatin environment.
+
+```{r plot-h3k27ac, eval=run_histone, fig.width=8, fig.height=2.5}
+plot_histone_boxplot(promoter$df, "H3K27ac", ylim = c(-0.5, 6.5), label_x = 1.5)
+```
+
+---
+
+# Summary
+
+This tutorial demonstrated a complete STADyUM workflow for human CD4+ T cells,
+from raw PRO-seq bigWig files to estimated transcription kinetics and their
+chromatin context. The key steps were:
+
+1. **TSS selection** — one representative (most upstream) TSS per gene.
+2. **Region construction** — 200 bp pause windows and trimmed gene body regions.
+3. **Rate estimation** — `estimateTranscriptionRates()` returning β, χ, μ, σ.
+4. **Post-processing** — quintile groups and Sharp / Broad classification saved
+   in the `rates` data frame of the `STADyUM` object.
+5. **Parameter relationships** — β–χ positive correlation, bimodal β–σ structure,
+   μ–σ positive correlation.
+6. **Chromatin context** — higher-β genes show stronger +1 nucleosome peaks
+   (Micro-C) and higher H3K4me3 / H3K27ac (ENCODE ChIP-seq) at their promoters
+   (when external data are available).
+
+This HTML report is designed to show the analysis and its figures inline in a
+single self-contained file. The full manuscript pipeline (scripts in
+`singleCellType/`) runs the same analyses for all species and cell types and
+saves publication-quality PDF figures separately.
+
+**Downstream analyses** enabled by the saved `cd4_rate.RDS`:
+
+- **Between-cell-type comparison**: pair CD4 and CD14 rate objects and apply a
+  likelihood ratio test to identify genes with cell-type-specific changes in β
+  or χ.
+- **Between-species comparison**: align orthologous TSSs across primate species
+  and test for evolutionary divergence in pause release kinetics.
+- **Sequence feature integration**: link β or σ groups to core promoter motifs
+  (TATA box, GC box, Initiator) or GC content to understand the sequence
+  determinants of Pol II pausing.
+
+---
+
+# Session Information
+
+```{r session-info}
+sessionInfo()
+```
