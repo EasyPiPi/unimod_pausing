@@ -1,0 +1,22 @@
+# paths.yaml — path configuration for the publish pipeline
+#
+# Set PROJECT_ROOT to the absolute path of the project on your machine.
+# All other paths are derived automatically from PROJECT_ROOT.
+#
+# To override a large-data path (e.g. if BAM files live on a separate disk),
+# set the corresponding environment variable before running scripts:
+#   ENCODE_BAM_ROOT, ENCODE_BW_ROOT, GENOME_ROOT, MICROC_1D_ROOT
+#
+# Usage:
+#   R scripts:     set root_dir, then source("codes/publish/load_config.R")
+#   Shell scripts: source "$(dirname "$0")/../paths.sh"
+#   Python:        python codes/publish/check_paths.py
+
+PROJECT_ROOT: ~/Desktop/project/YiXin_Likelihood
+
+# Default sub-paths (shown for reference; override via environment variables):
+#   ENCODE_BAM_ROOT  — ${PROJECT_ROOT}/data/result2/encode/bam
+#   ENCODE_BW_ROOT   — ${PROJECT_ROOT}/data/result2/encode/bw_clean
+#   GENOME_ROOT      — ${PROJECT_ROOT}/codes/micro-c
+#   MICROC_1D_ROOT   — ${PROJECT_ROOT}/data/micro-c
+#   MICROC_PAIRS_ROOT — (HPC only; no default)
