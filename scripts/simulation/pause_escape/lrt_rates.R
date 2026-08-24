@@ -13,16 +13,14 @@ library(GenomicRanges)
 library(tidyverse)
 
 #### testing files ####
-root_dir <- "~/Desktop/github/unimod_pausing"
-
+# root_dir <- "."
 # table_dir <- file.path(root_dir, "outputs/simulation/tables/lrt_pause_escape")
 # figure_dir <- file.path(root_dir, "outputs/simulation/figures/lrt_pause_escape")
-
 # helper_in <-
 #   file.path(root_dir, "scripts/unimod/helper_function_em_two_condition.R")
 
 #### end of parsing arguments ####
-meta_in <- file.path(root_dir, "metadata/simulation_params_lrt.csv")
+meta_in <- "metadata/simulation_params_lrt.csv"
 suffix <- "_subsample_cells"
 
 ## Set theme for ggplot2 ##

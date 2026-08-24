@@ -35,3 +35,10 @@ nohup.out
 *.gif
 
 Rplot.png
+
+# OS / IDE / Python
+.DS_Store
+__pycache__/
+*.py[cod]
+.vscode/
+.idea/

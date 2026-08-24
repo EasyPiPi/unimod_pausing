@@ -17,7 +17,7 @@ stopifnot(exists("root_dir"))
   outputs    = file.path(root_dir, "outputs"),
   encode_bam = .e("ENCODE_BAM_ROOT", file.path(root_dir, "data", "result2", "encode", "bam")),
   encode_bw  = .e("ENCODE_BW_ROOT",  file.path(root_dir, "data", "result2", "encode", "bw_clean")),
-  genome     = .e("GENOME_ROOT",     file.path(root_dir, "codes", "micro-c")),
+  genome     = .e("GENOME_ROOT",     file.path(root_dir, "ext_data", "micro-c")),
   microc_1d  = .e("MICROC_1D_ROOT",  file.path(root_dir, "data", "micro-c"))
 )
 

@@ -54,5 +54,5 @@ if __name__ == "__main__":
 
 # Example:
 # python 3_2_calGCInfo_region.py \
-#   --input_dir /Users/zeng/Desktop/project/YiXin_Likelihood/outputs/publish/betweenSpecies/sequence \
-#   --output_path /Users/zeng/Desktop/project/YiXin_Likelihood/outputs/publish/betweenSpecies/sequence
+#   --input_dir outputs/publish/betweenSpecies/sequence \
+#   --output_path outputs/publish/betweenSpecies/sequence

@@ -40,20 +40,22 @@ Promoter-proximal pausing of RNA polymerase II (Pol II) has separable kinetic ($
 
 ### 1. Environment Setup
 
-Create and activate the conda environment:
+Create and activate the conda environment, then install the `STADyUM` package:
 
 ```bash
 conda env create -f environment.yml
 conda activate unimod
+R -e 'BiocManager::install("STADyUM")'
 ```
 
-### 2. Configuration
+### 2. Configuration & Data Setup
 
-1. Review and adjust `config.yml` with your local reference paths if needed (reference genome FASTA, BWA index, chromosome sizes, and gene annotations; defaults use standard relative paths).
-2. For downstream figure scripts in `analysis/`, set `PROJECT_ROOT` in `analysis/paths.yaml` or export the environment variable:
+1. **Processed Data**: Download and extract the processed data package from [Zenodo (DOI: 10.5281/zenodo.20598895)](https://doi.org/10.5281/zenodo.20598895) into `data/publish/`.
+2. **Verify Inputs**: Check that all required inputs are in place:
    ```bash
-   export PROJECT_ROOT="/path/to/unimod_pausing"
+   python analysis/check_paths.py
    ```
+3. **Reference Paths**: Review and adjust `config.yml` or `analysis/paths.yaml` if large external datasets (BAMs, reference FASTA) reside in custom locations (by default, scripts auto-detect relative paths from repository root).
 
 ### 3. Running the Snakemake Workflow
 

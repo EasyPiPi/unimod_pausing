@@ -14,11 +14,9 @@ library(rtracklayer)
 library(Gviz)
 
 #### testing files ####
-root_dir <- "~/Desktop/github/unimod_pausing"
-
+# root_dir <- "."
 # table_dir <- file.path(root_dir, "outputs/simulation/tables/lrt_pause_escape")
 # figure_dir <- file.path(root_dir, "outputs/simulation/figures/lrt_pause_escape")
-
 # lambda <- "lrt_high"
 
 #### end of parsing arguments ####
@@ -27,7 +25,7 @@ bar_colors <- c("#1868B2", "#F3A332")
 kmin <- 1
 kmax <- 200
 
-meta_in <- file.path(root_dir, "metadata/simulation_params_lrt.csv")
+meta_in <- "metadata/simulation_params_lrt.csv"
 
 rate_tbls <- read_csv(meta_in)
 colnames(rate_tbls) <-

@@ -77,12 +77,12 @@ populates `.paths` with the standard sub-directories used throughout the pipelin
 
 ```{r paths}
 root_dir <- normalizePath(
-  Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
+  Sys.getenv("PROJECT_ROOT", "."),
   mustWork = FALSE)
 source(file.path(root_dir, "analysis", "load_config.R"))
 
 # Helper functions shared across tutorial sections
-source(file.path(root_dir, "codes", "publish", "examples", "helper_function.R"))
+source(file.path(root_dir, "analysis", "examples", "helper_function.R"))
 
 # ── Required input files ───────────────────────────────────────────────────────
 # TSN: GRanges of detected transcription start sites with PRO-seq signal scores

@@ -27,7 +27,7 @@ library(ggExtra)
 # ============================================================
 
 root_dir <- normalizePath(
-  Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
+  Sys.getenv("PROJECT_ROOT", "."),
   mustWork = FALSE)
 source(file.path(root_dir, "analysis", "load_config.R"))
 
@@ -36,9 +36,9 @@ source(file.path(root_dir, "analysis", "load_config.R"))
 # SOURCE HELPER SCRIPTS
 # ============================================================
 
-source(file.path(root_dir, "codes", "publish", "perturbation",
+source(file.path(root_dir, "analysis", "perturbation",
                  "helper_function_em_two_condition.R"))
-source(file.path(root_dir, "codes", "publish", "perturbation",
+source(file.path(root_dir, "analysis", "perturbation",
                  "helper_function_em_pause_release.R"))
 
 

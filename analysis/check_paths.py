@@ -6,15 +6,15 @@ Required files (bundled with the package) cause an error if missing.
 Optional large files (reference genomes, BAMs, BigWigs) print warnings only.
 
 Usage:
-  python codes/publish/check_paths.py
-  PROJECT_ROOT=/other/path python codes/publish/check_paths.py
+  python analysis/check_paths.py
+  PROJECT_ROOT=/other/path python analysis/check_paths.py
 """
 
 import os
 import sys
 from pathlib import Path
 
-_PUBLISH_DIR = Path(__file__).resolve().parent   # codes/publish/
+_PUBLISH_DIR = Path(__file__).resolve().parent   # analysis/
 _DEFAULT_ROOT = _PUBLISH_DIR.parent       # project root
 
 PROJECT_ROOT = Path(os.path.expanduser(
@@ -24,7 +24,7 @@ PROJECT_ROOT = Path(os.path.expanduser(
 DATA_ROOT   = PROJECT_ROOT / "data" / "publish"
 ENCODE_BAM  = Path(os.environ.get("ENCODE_BAM_ROOT",  str(PROJECT_ROOT / "data" / "result2" / "encode" / "bam")))
 ENCODE_BW   = Path(os.environ.get("ENCODE_BW_ROOT",   str(PROJECT_ROOT / "data" / "result2" / "encode" / "bw_clean")))
-GENOME_ROOT = Path(os.environ.get("GENOME_ROOT",      str(PROJECT_ROOT / "codes" / "micro-c")))
+GENOME_ROOT = Path(os.environ.get("GENOME_ROOT",      str(PROJECT_ROOT / "ext_data" / "micro-c")))
 MICROC_1D   = Path(os.environ.get("MICROC_1D_ROOT",   str(PROJECT_ROOT / "data" / "micro-c")))
 
 REQUIRED: list[Path] = [

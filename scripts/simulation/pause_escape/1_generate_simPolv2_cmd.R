@@ -1,12 +1,11 @@
 #### load packages ####
 library(tidyverse)
 
-#### testing files ####
-root_dir <- "~/Desktop/github/unimod_pausing"
+#### parse paths and parameters ####
+root_dir <- Sys.getenv("PROJECT_ROOT", ".")
+simpol_bin <- Sys.getenv("SIMPOL_BIN", "simPol_Release")
 
 meta_in <- file.path(root_dir, "metadata/simulation_params_lrt.csv")
-
-#### end of parsing arguments ####
 
 n <- 20000
 t <- 40
@@ -18,7 +17,7 @@ zeta_max <- 2500
 meta <- read_csv(meta_in, show_col_types = FALSE)
 meta <- meta %>%
   mutate(cmd = paste(
-    "~/Desktop/github/SimPolv2/bin/simPol_Release", "-n", n,
+    simpol_bin, "-n", n,
     "-a", a_range, "-b", b_range, "-z", z,
     "-t", t, "-s", s, "-k", k_range,
     paste0("--kSd=", ksd_range), paste0("--addSpace=", add_space_range),
@@ -27,4 +26,5 @@ meta <- meta %>%
     "-d", paste0("./", param_id)
   ))
 
-write(meta$cmd, file.path(root_dir, "scripts/simulation/pause_escape", "simulation_rate_lrt.sh"))
+output_sh <- file.path(root_dir, "scripts/simulation/pause_escape", "simulation_rate_lrt.sh")
+write(meta$cmd, output_sh)

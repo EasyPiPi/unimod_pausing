@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # NOTE: This script runs on an HPC cluster where Micro-C .pairs.gz files live.
 # Set MICROC_PAIRS_ROOT (location of pairs files) and PROJECT_ROOT before running,
-# or configure them in codes/publish/paths.yaml.
+# or configure them in analysis/paths.yaml.
 set -euo pipefail
 
 # shellcheck source=../paths.sh
@@ -11,7 +11,7 @@ source "$(dirname "$0")/../paths.sh"
 # HPC-specific and are not distributed with the publish package.
 if [[ -z "${MICROC_PAIRS_ROOT}" ]]; then
   echo "ERROR: MICROC_PAIRS_ROOT is not set. Set it in the environment or in" >&2
-  echo "       codes/publish/paths.yaml before running this script." >&2
+  echo "       analysis/paths.yaml before running this script." >&2
   exit 1
 fi
 
@@ -41,7 +41,7 @@ do
             continue
         fi
 
-        python extract_1d_signal.py \
+        python "$(dirname "$0")/2_1_2_extract_1d_signal.py" \
             --pair_path "${pair_path}" \
             --tss_file "${tss_file}" \
             --output_file "${output_file}"

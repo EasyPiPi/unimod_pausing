@@ -27,9 +27,8 @@ library(tidyverse)
 library(rtracklayer)
 
 #### testing files ####
-# root_dir <- "~/Desktop/github/unimod_pausing"
-# helper_in <-
-#   "/home/yixin/Desktop/github/unimod_pausing/scripts/unimod/helper_function_em_pause_release.R"
+# root_dir <- "."
+# helper_in <- file.path(root_dir, "scripts/unimod/helper_function_em_pause_release.R")
 
 # sel_sample <-
 #   "k30ksd55kmin17kmax200l1950a1b1z2000zsd1000zmin1500zmax2500t40n20000s33h17"

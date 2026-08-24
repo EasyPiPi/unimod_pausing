@@ -2,11 +2,11 @@
 
 ## Project Summary
 
-This directory contains the analysis scripts used to generate **Main Figure XX** and **Supplementary Figure XX**.
+This directory contains the analysis scripts used to generate **Main Figure 3** and **Supplementary Figures S3–S6, S7B**.
 
-- **Processed input data** used in this analysis are stored in `XXX`.
-- **Intermediate files** (rate objects, nucleosome matrices, signal BED files) are stored in `XXX`.
-- **Final figure outputs** (PDF files) are stored in `XXX`.
+- **Processed input data** used in this analysis are stored in `data/publish/` (downloadable from Zenodo).
+- **Intermediate files** (rate objects, nucleosome matrices, signal BED files) are stored in `outputs/publish/singleCellType/`.
+- **Final figure outputs** (PDF files) are stored in `outputs/publish/singleCellType/`.
 
 The pipeline characterizes transcriptional dynamics in human, rhesus macaque, and baboon immune cells (CD4+ T cells and CD14+ monocytes) by integrating PRO-seq transcription rates, Micro-C nucleosome positioning signals, histone modification data, and promoter sequence elements.
 
@@ -53,8 +53,8 @@ Reads the STADyUM rate RDS objects produced by `1_1_EstimateRates_all_species.R`
 - `beta_sigma_2d_all.pdf` — supplementary multi-panel β vs. σ density for all other samples
 
 **Related figures:**
-- Main Figure XX (β vs. χ scatter; β vs. σ density — Human CD4+)
-- Supplementary Figure XX (β vs. χ, μ vs. σ, β vs. σ — all species/cell types)
+- Main Figure 3A, 3D (β vs. χ scatter; β vs. σ density — Human CD4+)
+- Supplementary Figure S3A, S5A–B (β vs. χ, μ vs. σ, β vs. σ — all species/cell types)
 
 ---
 
@@ -150,8 +150,8 @@ Reads nucleosome score matrices from `2_2_1_nucleosome_position.R` and generates
 - `sigma_beta_Micro_all.pdf` — supplementary 6-panel layout: σ groups by β group, all six samples
 
 **Related figures:**
-- Main Figure XX (nucleosome profiles by β and σ group — Human CD4+)
-- Supplementary Figure XX (nucleosome profiles — all other species/cell types; σ by β group — all samples)
+- Main Figure 3B, 3E (nucleosome profiles by β and σ group — Human CD4+)
+- Supplementary Figure S3B, S6A–C (nucleosome profiles — all other species/cell types; σ by β group — all samples)
 
 ---
 
@@ -171,7 +171,7 @@ Links TSS pause sites to annotated core promoter elements (TATA-box, Initiator, 
 - `human/cd4_Micro-C_beta_gb_motif.pdf` and `human/cd14_Micro-C_beta_gb_motif.pdf` — nucleosome profiles faceted by motif class, colored by β group
 
 **Related figures:**
-- Supplementary Figure XX (promoter motif UpSet plots and motif-stratified nucleosome profiles)
+- Supplementary Figure S4 (promoter motif UpSet plots and motif-stratified nucleosome profiles)
 
 ---
 
@@ -198,7 +198,7 @@ Defines 500 bp promoter windows centered on each TSS using STADyUM pause regions
 - `cd4_histone.rds` — RDS object containing promoter data frame with histone signal for CD4+
 
 **Related figures:**
-- Main Figure XX / Supplementary Figure XX (histone modification signals by β and expression group)
+- Main Figure 3C, Supplementary Figure S4 (histone modification signals by β and expression group)
 
 ---
 
@@ -222,7 +222,7 @@ Filters human CD4+ and CD14+ genes to those with high expression (chiGroup == "H
 - `human/cd14_beta_GO_chiHigh.pdf` — GO enrichment dot plot by β group for highly expressed CD14+ genes
 
 **Related figures:**
-- Main Figure XX / Supplementary Figure XX (GO enrichment by β group)
+- Supplementary Figure S7B (GO enrichment by β group in CD4+ and CD14+ cells)
 
 ---
 

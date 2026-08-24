@@ -86,10 +86,10 @@ def main():
 if __name__ == '__main__':
     main()
 
-#python extract_1d_signal.py \
-#--pair_path /grid/siepel/home/zeng/projects/Zhao_2025/comparaReg_analyses/resources/contacts/pairs_files/human_cd4_merged.pairs.gz \
-# --tss_file  /grid/siepel/home/zeng/projects/Zhao_2025/result/STADyUM/cd4_tss_sort.bed \
-#--output_file /grid/siepel/home/zeng/projects/Zhao_2025/result/STADyUM/cd4_tss_1d_signal.bed
+# python 2_1_2_extract_1d_signal.py \
+#   --pair_path data/micro-c/pairs/human_cd4_merged.pairs.gz \
+#   --tss_file  outputs/publish/singleCellType/1_transcriptionRate/human/cd4_tss_sort.bed \
+#   --output_file data/micro-c/human_cd4_1d_signal.bed
 
 
 

@@ -3,7 +3,6 @@ unimod_pausing/
     LICENSE
     README.md
     Snakefile
-    config.example.yml
     config.yml
     environment.yml
     figures.md

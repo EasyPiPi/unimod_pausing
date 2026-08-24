@@ -17,7 +17,7 @@ library(cowplot)
 # ---------------------------------------------------------------------------
 
 root_dir <- normalizePath(
-  Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
+  Sys.getenv("PROJECT_ROOT", "."),
   mustWork = FALSE)
 source(file.path(root_dir, "analysis", "load_config.R"))
 
