@@ -8,7 +8,7 @@ library(stringr)
 root_dir <- normalizePath(
   Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
   mustWork = FALSE)
-source(file.path(root_dir, "codes", "publish", "load_config.R"))
+source(file.path(root_dir, "analysis", "load_config.R"))
 
 result_dir <- file.path(.paths$outputs, "publish/singleCellType/5_GO/")
 

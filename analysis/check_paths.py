@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 _PUBLISH_DIR = Path(__file__).resolve().parent   # codes/publish/
-_DEFAULT_ROOT = _PUBLISH_DIR.parent.parent       # project root
+_DEFAULT_ROOT = _PUBLISH_DIR.parent       # project root
 
 PROJECT_ROOT = Path(os.path.expanduser(
     os.environ.get("PROJECT_ROOT", str(_DEFAULT_ROOT))

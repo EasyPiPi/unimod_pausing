@@ -8,7 +8,7 @@
 
 # This file lives at codes/publish/paths.sh; two levels up is the project root.
 _PATHS_SH_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-: "${PROJECT_ROOT:="$(cd "${_PATHS_SH_DIR}/../.." && pwd)"}"
+: "${PROJECT_ROOT:="$(cd "${_PATHS_SH_DIR}/.." && pwd)"}"
 unset _PATHS_SH_DIR
 
 DATA="${PROJECT_ROOT}/data/publish"

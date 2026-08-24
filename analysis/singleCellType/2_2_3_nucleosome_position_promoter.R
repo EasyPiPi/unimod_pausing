@@ -12,7 +12,7 @@ library(UpSetR)
 root_dir <- normalizePath(
   Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
   mustWork = FALSE)
-source(file.path(root_dir, "codes", "publish", "load_config.R"))
+source(file.path(root_dir, "analysis", "load_config.R"))
 
 result_dir <- file.path(.paths$outputs, "publish/singleCellType/2_nucleosomePositioning/")
 
@@ -70,6 +70,65 @@ get_promoter_motif_from_stadyum_obj <- function(stadyum_obj, promoter_df) {
 
 mycolor <- c("#DC143C","#0000FF","#20B2AA","#FFA500","#9370DB",
              "#98FB98","#F08080","#1E90FF","#7CFC00","#FFFF00")
+make_beta_group_df_long <- function(count_matrix, rate_df, group_col, range = NULL,
+                                    drop_groups = NULL) {
+  df <- as.data.frame(count_matrix)
+  df$group <- rate_df[[group_col]]
+
+  group_means_df <- df %>%
+    group_by(group) %>%
+    summarise(across(starts_with("V"), mean), .groups = "drop")
+
+  df_long <- group_means_df %>%
+    pivot_longer(
+      cols = starts_with("V"),
+      names_to = "position_str",
+      values_to = "value"
+    ) %>%
+    mutate(position = as.numeric(str_remove(position_str, "V")) - 1001)
+
+  if (!is.null(range)) {
+    df_long <- df_long %>%
+      filter(position >= range[1], position <= range[2])
+  }
+
+  if (!is.null(drop_groups)) {
+    df_long <- df_long %>%
+      filter(!group %in% drop_groups & !is.na(group))
+  }
+
+  df_long
+}
+
+plot_beta_group_line_core <- function(df_long, color_values,
+                                      legend_inside = c(0.7, 0.9)) {
+
+  groups <- sort(unique(df_long$group))
+  if (length(color_values) < length(groups)) {
+    stop("color_values not correct!")
+  }
+  color_values <- color_values[seq_along(groups)]
+  names(color_values) <- groups
+
+  ggplot(df_long, aes(x = position, y = value, color = group)) +
+    geom_line(linewidth = 0.5) +
+    labs(x = "Distance from TSS (bp)", y = "Mean Micro-C signal") +
+    scale_color_manual(values = color_values) +
+    scale_x_continuous(breaks = c(-500, 0, 500)) +
+    scale_y_continuous(n.breaks = 4) +
+    theme_cowplot() +
+    theme(
+      panel.grid = element_blank(),
+      legend.position = "inside",
+      legend.position.inside = legend_inside,
+      legend.title = element_blank(),
+      axis.ticks = element_line(color = "black", size = 0.3),
+      axis.line = element_line(color = "black", size = 0.3),
+      axis.text  = element_text(size = 14),
+      strip.text = element_text(size = 14),
+      legend.text = element_text(size = 12)
+    )
+}
 
 plot_beta_group_line_promoter <- function(count_matrix, rate_df, group_col, range = NULL) {
 

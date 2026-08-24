@@ -14,7 +14,7 @@ library(UpSetR)
 root_dir <- normalizePath(
   Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
   mustWork = FALSE)
-source(file.path(root_dir, "codes", "publish", "load_config.R"))
+source(file.path(root_dir, "analysis", "load_config.R"))
 
 lrt_dir    <- file.path(.paths$outputs, "publish/betweenSpecies/LRT")
 seq_dir    <- file.path(.paths$outputs, "publish/betweenSpecies/sequence")

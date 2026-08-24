@@ -24,12 +24,12 @@ library(pracma)   # for findpeaks() inside find_valley_threshold()
 # ============================================================
 
 # Which species to process: "human", "rhesus", or "baboon"
-SPECIES <- "human"
+SPECIES <- "baboon"
 
 root_dir <- normalizePath(
   Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
   mustWork = FALSE)
-source(file.path(root_dir, "codes", "publish", "load_config.R"))
+source(file.path(root_dir, "analysis", "load_config.R"))
 
 result_dir <- file.path(.paths$outputs, "publish/singleCellType/1_transcriptionRate/")
 
@@ -82,18 +82,20 @@ species_configs <- list(
 # by this script are included so it runs independently.
 # ============================================================
 
-# Select the single most upstream TSS per gene (strand-aware).
-# On "+" strand the most upstream TSS has the smallest coordinate;
-# on "-" strand it has the largest coordinate.
-keep_upstream_tss <- function(tsn) {
+
+keep_max_tsn <- function(tsn, tsn_cutoff = 5) {
   as.data.frame(tsn) %>%
-    group_by(ensembl_gene_id, strand) %>%
-    slice_min(order_by = ifelse(strand == "+", start, -start),
-              n = 1, with_ties = FALSE) %>%
-    ungroup() %>%
+    dplyr::filter(score >= tsn_cutoff) %>%
+    dplyr::group_by(ensembl_gene_id) %>%
+    dplyr::arrange(
+      dplyr::desc(score),
+      ifelse(strand == "+", start, -start),
+      .by_group = TRUE
+    ) %>%
+    dplyr::slice_head(n = 1) %>%
+    dplyr::ungroup() %>%
     as_granges()
 }
-
 # Compute TSS distances between two samples for QC.
 # Returns a named numeric vector of absolute distances for genes present in both samples.
 # TSS coordinates are not modified.
@@ -114,7 +116,8 @@ build_readcount_regions <- function(bw_tsn,
                                     transcripts,
                                     tsn_cutoff    = 5,
                                     gb_min_length = 6000,
-                                    trim_len      = 2000,
+                                    gb_trim_len   = 1250,
+                                    gb_max_length = 90000,
                                     kmax          = 200) {
   if (!inherits(bw_tsn, "GRanges"))
     stop("bw_tsn must be a GRanges.")
@@ -143,23 +146,42 @@ build_readcount_regions <- function(bw_tsn,
     mutate(width = 1)
 
   # Build gene bodies spanning from TSN to TTS, apply length filter and trim
-  generate_gene_body <- function(bw_tsn, bw_tts, bw_pause, gb_min_length, trim_len) {
+  generate_gene_body <- function(bw_tsn,
+                               bw_tts,
+                               bw_pause,
+                               gb_min_length,
+                               gb_trim_len,
+                               gb_max_length) {
     idx_tts <- match(bw_pause$ensembl_gene_id, bw_tts$ensembl_gene_id)
     idx_tsn <- match(bw_pause$ensembl_gene_id, bw_tsn$ensembl_gene_id)
-    keep    <- !is.na(idx_tts) & !is.na(idx_tsn)
-    if (!any(keep)) stop("No overlapping genes between TSN/TTS and pause set.")
+
+    keep <- !is.na(idx_tts) & !is.na(idx_tsn)
+    if (!any(keep)) {
+      stop("No overlapping genes between TSN/TTS and pause set.")
+    }
 
     bw_tts_filtered <- bw_tts[idx_tts[keep]]
     bw_tsn_filtered <- bw_tsn[idx_tsn[keep]]
 
-    gb         <- punion(bw_tsn_filtered, bw_tts_filtered, fill.gap = TRUE)
-    gb$gene_id <- bw_tsn_filtered$ensembl_gene_id
-    gb_filt    <- gb[width(gb) > gb_min_length]
-    gb_filt    <- gb_filt - trim_len
-    gb_filt
+    gb_full <- punion(bw_tsn_filtered, bw_tts_filtered, fill.gap = TRUE)
+    gb_full$gene_id <- bw_tsn_filtered$ensembl_gene_id
+
+    min_full_width <- gb_min_length + 2 * gb_trim_len
+    gb_full <- gb_full[width(gb_full) >= min_full_width]
+    # Exclude 1,250 bp near TSS and 1,250 bp near transcript end
+    gb_trimmed <- gb_full - gb_trim_len
+
+    # Cap at 90 kb from the TSS-proximal side
+    gb_capped <- resize(
+      gb_trimmed,
+      width = pmin(width(gb_trimmed), gb_max_length),
+      fix = "start"
+    )
+
+    gb_capped
   }
 
-  bw_gb_filtered <- generate_gene_body(bw_tsn, bw_tts, bw_pause, gb_min_length, trim_len)
+  bw_gb_filtered <- generate_gene_body(bw_tsn, bw_tts, bw_pause, gb_min_length, gb_trim_len, gb_max_length)
 
   # Match pause regions to the filtered gene bodies
   match_idx         <- match(bw_gb_filtered$gene_id, bw_pause$ensembl_gene_id)
@@ -242,8 +264,8 @@ estimate_rates_for_species <- function(cfg, result_dir) {
   tsn2 <- readRDS(cfg$tsn2_file)
 
   # --- Keep one upstream TSS per gene ---
-  tsn1 <- keep_upstream_tss(tsn1)
-  tsn2 <- keep_upstream_tss(tsn2)
+  tsn1 <- keep_max_tsn(tsn1)
+  tsn2 <- keep_max_tsn(tsn2)
 
   # --- Save TSS distance table (QC only; coordinates are not modified) ---
   dist_df   <- data.frame(Distance = compute_tss_distances(tsn1, tsn2))

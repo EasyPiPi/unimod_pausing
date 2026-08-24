@@ -18,7 +18,7 @@ library(STADyUM)
 root_dir <- normalizePath(
   Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
   mustWork = FALSE)
-source(file.path(root_dir, "codes", "publish", "load_config.R"))
+source(file.path(root_dir, "analysis", "load_config.R"))
 
 result_dir <- file.path(.paths$outputs, "publish/betweenCellType/histoneModification")
 
@@ -31,7 +31,7 @@ cd4_rate_in       <- file.path(.paths$outputs, "publish/singleCellType/1_transcr
 cd14_rate_in      <- file.path(.paths$outputs, "publish/singleCellType/1_transcriptionRate/human/cd14_rate.RDS")
 tss_dist_in       <- file.path(.paths$outputs, "publish/singleCellType/1_transcriptionRate/human/cd4_cd14_tss_dist.txt")
 lrt_results_in    <- file.path(.paths$outputs, "publish/betweenCellType/LRT/human/lrt_result.txt")
-bam_metadata_path <- file.path(.paths$data, "encode/metadata/meta_bam.RDS")
+bam_metadata_path <- file.path(.paths$data, "encode/meta_bam.RDS")
 
 proximal_region_len <- 500
 histones <- c("H3K4me3", "H3K27ac")

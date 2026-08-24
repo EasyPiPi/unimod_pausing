@@ -5,7 +5,7 @@ library(tidyverse)
 root_dir <- normalizePath(
   Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
   mustWork = FALSE)
-source(file.path(root_dir, "codes", "publish", "load_config.R"))
+source(file.path(root_dir, "analysis", "load_config.R"))
 
 result_dir <- file.path(.paths$outputs, "publish/betweenCellType/LRT/")
 
@@ -119,7 +119,7 @@ run_lrt_analysis <- function(species, cfg) {
   # Core LRT
   lrt      <- likelihoodRatioTest(cd4_rate, cd14_rate, scale_factor)
   beta_lrt <- get_beta_lrt_info(lrt, prefix1 = 'CD4', prefix2 = 'CD14')
-  beta_lrt <- get_lrt_chi_stats(beta_lrt, CD4_chi, CD14_chi, scale_factor, 0.5)
+  beta_lrt <- get_lrt_chi_stats(beta_lrt, CD4_chi, CD14_chi, scale_factor, 0.8)
   beta_lrt$pause_change    <- paste0(beta_lrt$CD4_sdGroup, '_to_', beta_lrt$CD14_sdGroup)
 
   # Species-specific post-processing

@@ -6,7 +6,7 @@ library(cowplot)
 root_dir <- normalizePath(
   Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
   mustWork = FALSE)
-source(file.path(root_dir, "codes", "publish", "load_config.R"))
+source(file.path(root_dir, "analysis", "load_config.R"))
 
 out_dir <- file.path(.paths$outputs, "publish/betweenSpecies")
 dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
@@ -145,8 +145,8 @@ ortho_genes <- read.table(
 # CD4
 process_cell_type(
   rate_path   = file.path(.paths$outputs, "publish/singleCellType/1_transcriptionRate/human/cd4_rate.RDS"),
-  baboon_bed  = file.path(.paths$data, "liftover/hglft_genome_3a4e45_25bea0.bed"),
-  rhesus_bed  = file.path(.paths$data, "liftover/hglft_genome_36cd63_262e10.bed"),
+  baboon_bed  = file.path(.paths$data, "liftover/baboon_cd4_to_human.bed"),
+  rhesus_bed  = file.path(.paths$data, "liftover/rhesus_cd4_to_human.bed"),
   ortho_genes = ortho_genes,
   cell_type   = "cd4",
   out_dir     = out_dir
@@ -155,8 +155,8 @@ process_cell_type(
 # CD14
 process_cell_type(
   rate_path   = file.path(.paths$outputs, "publish/singleCellType/1_transcriptionRate/human/cd14_rate.RDS"),
-  baboon_bed  = file.path(.paths$data, "liftover/hglft_genome_4ecd_9138e0.bed"),
-  rhesus_bed  = file.path(.paths$data, "liftover/hglft_genome_3ff64c_9134c0.bed"),
+  baboon_bed  = file.path(.paths$data, "liftover/baboon_cd14_to_human.bed"),
+  rhesus_bed  = file.path(.paths$data, "liftover/rhesus_cd14_to_human.bed"),
   ortho_genes = ortho_genes,
   cell_type   = "cd14",
   out_dir     = out_dir

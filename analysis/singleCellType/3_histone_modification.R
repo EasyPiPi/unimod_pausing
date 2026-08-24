@@ -17,7 +17,7 @@ library(ggpubr)
 root_dir <- normalizePath(
   Sys.getenv("PROJECT_ROOT", path.expand("~/Desktop/project/YiXin_Likelihood")),
   mustWork = FALSE)
-source(file.path(root_dir, "codes", "publish", "load_config.R"))
+source(file.path(root_dir, "analysis", "load_config.R"))
 
 cd4_rate_in     <- file.path(.paths$outputs, "publish/singleCellType/1_transcriptionRate/human/cd4_rate.RDS")
 cd14_rate_in    <- file.path(.paths$outputs, "publish/singleCellType/1_transcriptionRate/human/cd14_rate.RDS")
@@ -46,7 +46,7 @@ cell_configs <- list(
     save_rds  = TRUE,
     ylims     = list(H3K4me3 = c(2, 9),    H3K27ac = c(-0.5, 6.5)),
     label_x   = list(H3K4me3 = 1.5,        H3K27ac = 1.5),
-    strict_p  = list(H3K4me3 = FALSE,       H3K27ac = FALSE)
+    strict_p  = list(H3K4me3 = TRUE,       H3K27ac = FALSE)
   ),
   cd14 = list(
     rate_in   = cd14_rate_in,

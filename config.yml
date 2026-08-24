@@ -1,22 +1,23 @@
 #### Directories ####
 ROOT_DIR:
-    "/home/yixin/Desktop/github/unimod_pausing"
+    "."
 GEO_PROSEQ_DIR:
-    "/data/geo/PROseq"
+    "ext_data/geo/PROseq"
+
 #### Files ####
 HUMAN_CHROMINFO:
-    "/home/yixin/evolgen/comparaReg/external_resources/human/chrominfo.txt"
+    "ext_data/genome/hg38/chrominfo.txt"
 HUMAN_BWA_INDEX:
-    "/home/yixin/evolgen/comparaReg/external_resources/human/bwa/index/genome.fasta"
+    "ext_data/genome/hg38/bwa/index/genome.fasta"
 HUMAN_GTF:
-    "/home/yixin/evolgen/comparaReg/external_resources/human/transcript.gtf"
+    "ext_data/genome/hg38/transcript.gtf"
 HUMAN_NONOLP_GENE:
-    "/home/yixin/evolgen/comparaReg/external_resources/human/non_overlapping_coding_genes.csv"
+    "ext_data/genome/hg38/non_overlapping_coding_genes.csv"
 
 #### Parameters ####
-tss_length: 250 # parameter k
-tts_length: 250 # parameter m
+tss_length: 250 # parameter k (window length downstream of TSS for pausing analysis)
+tts_length: 250 # parameter m (window length for TTS)
 rc_cutoff: 10 # cutoff for PRO-cap 5' end read count to be considered as active
 gb_min_length: 6000 # filter out genes shorter than this length
 gb_max_length: 90000 # when gene is longer than this length, only use length up to this cutoff for read counting
-dist_to_tss: 1000 # distance to TSS and TTS for gene body read counting        
+dist_to_tss: 1250 # distance to TSS and TTS for gene body read counting (excludes 1,250 bp TSS-proximal and TTS-proximal regions)

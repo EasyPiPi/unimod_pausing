@@ -1,68 +1,111 @@
+# Comparative Analysis of Promoter-Proximal Pausing
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Bioconductor](https://img.shields.io/badge/Bioconductor-STADyUM-blue.svg)](https://bioconductor.org/packages/release/bioc/html/STADyUM.html)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20598895-blue.svg)](https://doi.org/10.5281/zenodo.20598895)
+
+This repository contains the analysis pipelines, Snakemake workflows, and figure-generation scripts for the manuscript:
+
+> **A comparative analysis of promoter-proximal pausing reveals kinetic and distributional dimensions of variation**  
+> Xin Zeng, Gilad Barshad, Rebecca Hassett, Edward J. Rice, Charles G. Danko, Adam Siepel\*, Yixin Zhao\*
+
 ---
-TITLE: "Unimod Pausing Analysis"
-AUTHORS: "Yixin Zhao; Xin Zeng"
-DATE: 2026-06-08
+
+## Overview
+
+Promoter-proximal pausing of RNA polymerase II (Pol II) has separable kinetic ($\beta$, pause-escape rate) and distributional ($\sigma$, pause-site dispersion) dimensions that vary differently across biological contexts. This repository provides:
+
+1. **Preprocessing & Snakemake Pipeline**: Automated preprocessing of PRO-seq/PRO-cap data, active TSS identification, parameter estimation, SimPol synthetic benchmarks, and perturbation LRT tests (Figs. 1, 2, S1, S2).
+2. **Downstream Analysis Workflows (`analysis/`)**: Scripts for single-cell-type kinetics/dispersion, cross-cell-type comparisons, cross-species evolutionary analyses, +1 nucleosome integration (Micro-C), histone modification ChIP-seq integration, and promoter sequence GC content / skew analyses (Figs. 3–7, S3–S11).
+3. **Statistical Package Implementation**: The underlying likelihood-ratio testing and EM algorithms are formally packaged in the Bioconductor R package **[STADyUM](https://bioconductor.org/packages/release/bioc/html/STADyUM.html)**.
+
 ---
 
-# Unimod pausing analysis
+## Repository Structure
 
-This repository contains the Snakemake workflow, metadata, and R scripts used to preprocess PRO-seq/PRO-cap data, fit the UniMod models, generate simulated data, perform LRT tests, and reproduce the manuscript figures.
+| Directory / File | Description |
+| :--- | :--- |
+| `Snakefile` | Top-level Snakemake entry point for preprocessing, simulation sweeps, and perturbation models. |
+| `rules/` | Snakemake rule sets: `proseq.smk` (read processing), `unimod.smk` (model fitting), `simulation.smk` (synthetic data sweeps). |
+| `scripts/` | Helper scripts called by Snakemake rules for PRO-seq 2.0 processing, EM optimization, and simulation analysis. |
+| `analysis/` | End-to-end analysis and figure-generation scripts for within-cell-type, between-cell-type, and between-species comparisons (Figs. 3–7). |
+| `metadata/` | Sample sheets, contrast definitions, spike-in scaling factors, and simulation parameters. |
+| `config.yml` | Configuration file for paths, chromosome info, genome indices, and analysis cutoffs. |
+| `environment.yml` | Conda environment specification (Python, R, Bioconductor, and bioinformatics tools). |
+| `figures.md` | Comprehensive mapping from each manuscript figure panel to its generating code. |
 
-## Repository layout
+---
 
-| Path | Purpose |
-| --- | --- |
-| `Snakefile` | Entry point that loads metadata/configuration, sets up helper functions, and includes the modular rule files. |
-| `rules/` | Snakemake rule collections for PRO-seq preprocessing (`proseq.smk`), unimod pause-release modeling (`unimod.smk`), and simulation post-processing (`simulation.smk`). |
-| `scripts/` | R and bash helpers invoked by the rules (PRO-seq wrapper, active TSS calling, statistical models, simulation visualizations). |
-| `metadata/` | CSV tables describing experiments (`metadata_aoi.csv`), contrasts (`metadata_comparison.csv`), PRO-cap samples (`copro_sample.csv`), spike-in scaling (`scaling_factor.csv`), and simulation parameter grids. |
-| `config.yml` | Paths to references (genomes, annotations) and analysis parameters (window sizes, gene filters, etc.). |
-| `environment.yml` | Conda environment mixing Python tooling (Snakemake, numpy/pandas) with the R/Bioconductor stack and command-line genomics utilities (bwa, bedtools, CrossMap, PRO-seq 2.0 dependencies). |
-| `analysis/` | Downstream analysis scripts used to reproduce the main and supplementary figures presented in the manuscript. |
-| `ext_data/` | Expected location for genomes, chain files, and PRO-cap bigWigs (currently symlinks to external paths). |
-| `outputs/`, `tmp/`, `indicator/` | Generated results, intermediates, and completion markers created by the workflow. |
-| `ms/` | Manuscript notes such as `pausedRNAP_nucleosome_quotes.md`. |
+## Quick Start
 
-## Pipeline overview
+### 1. Environment Setup
 
-The `Snakefile` orchestrates the complete analysis by:
+Create and activate the conda environment:
 
-1. Importing helper libraries and reading shared metadata tables up front so rules can reuse their columns as wildcards.
-2. Defining `rule all`, which enumerates the final deliverables: processed sequencing bigWigs, pause-escape parameter estimates, likelihood-ratio test (LRT) tables, simulation summaries, and visualization files for the manuscript.
-3. Including three focused rule modules:
-   * **`rules/proseq.smk`** – indexes genomes, links GEO fastqs, runs the PRO-seq 2.0 bash pipeline, extracts 5′ end PRO-seq signals, normalizes coverage, and writes strand-specific bigWigs.
-   * **`rules/unimod.smk`** – converts transcripts to counting regions, fits the unimod models per sample, compares two conditions, and generates figure-ready summaries.
-   * **`rules/simulation.smk`** – subsamples RDS simulation outputs, summarizes parameter sweeps, and creates LRT tables that match experimental coverage.
+```bash
+conda env create -f environment.yml
+conda activate unimod
+```
 
-## Scripts directory
+### 2. Configuration
 
-* `scripts/proseq/`: PRO-seq 2.0 wrapper (`proseq2.0.bsh`) plus helper R scripts for transcript processing and active TSS detection (`find_active_tss_DLD1.R`).
-* `scripts/unimod/`: Core statistical routines, including `analyze_one_sample_poisson_pause_release.R`, `analyze_two_samples_DLD1.R`, EM helpers, counting-region generation, and visualization (`visualize_two_samples.R`).
-* `scripts/simulation/`: Post-processing utilities for simulation RDS files, coverage matching, LRT summaries, and BW visualizations.
+1. Review and adjust `config.yml` with your local reference paths if needed (reference genome FASTA, BWA index, chromosome sizes, and gene annotations; defaults use standard relative paths).
+2. For downstream figure scripts in `analysis/`, set `PROJECT_ROOT` in `analysis/paths.yaml` or export the environment variable:
+   ```bash
+   export PROJECT_ROOT="/path/to/unimod_pausing"
+   ```
 
-## Metadata and configuration tips
+### 3. Running the Snakemake Workflow
 
-* Update `config.yml` with absolute paths to your reference genomes, chromosome sizes, annotation GTF, and analysis-specific filters before running Snakemake.
-* Inspect the CSV schemas in `metadata/` to understand how assays, groups, references, spike-in scaling factors, and simulation grids are encoded. These tables drive wildcard resolution everywhere in the workflow.
-* Create the conda environment via `conda env create -f environment.yml` (or `mamba env create ...`) so both Python and R dependencies match the expected versions.
+* **Dry run:**
+  ```bash
+  snakemake -np
+  ```
+* **Execute workflow:**
+  ```bash
+  snakemake --cores 8
+  ```
 
-## Getting started
+---
 
-1. **Dry-run the workflow:** after editing `config.yml`, run `snakemake -np` to inspect the dependency graph without executing heavy jobs.
-2. **Run the workflow:** `snakemake --cores 4` (adjust cores as needed); targets default to `rule all` defined in `Snakefile`.
-3. **Trace a rule end-to-end:** e.g., follow `rules/unimod.smk:analyze_one_sample_pause_release` into `scripts/unimod/analyze_one_sample_poisson_pause_release.R` to see how pause-release rates are estimated.
-4. **Review visualization scripts:** use `scripts/unimod/visualize_two_samples.R` to understand how figure panels are composed from processed outputs.
-5. **Check manuscript mappings:** `figures.md` documents which scripts generate each figure; keep those references handy when recreating panels.
+## Figure Reproduction
 
-## Additional notes
+Detailed instructions and file-level mappings for all panels (Main Figures 1–7 and Supplementary Figures S1–S11) are cataloged in [`figures.md`](figures.md).
 
-* Supplemental figures combine Snakemake outputs with manual layout steps in Inkscape and IGV.
-* Temporary outputs under `tmp/` can be safely removed between runs; Snakemake will regenerate them as needed.
-* Simulation rules expect pre-existing inputs under `outputs/simulation/data_lrt/` and `outputs/simulation/data_fk/`; acquisition/generation of those inputs is TODO to document.
-* `ext_data/copro/hg19/*.bw` and `ext_data/chain/hg19ToHg38.over.chain.gz` are required for PRO-cap liftover; ensure these exist or symlink to their locations.
+* **Simulations & LRT Benchmark (Fig. 1, Supp. Fig. S1)**: Run via `rules/simulation.smk` or standalone scripts in `scripts/simulation/`.
+* **Perturbation Experiments (Fig. 2, Supp. Fig. S2)**: Run via `rules/unimod.smk` or standalone scripts in `analysis/perturbation/`.
+* **Single Cell-Type & Chromatin Features (Fig. 3, Supp. Figs. S3–S6)**: Run scripts in `analysis/singleCellType/`.
+* **Between Cell-Type Comparisons (Fig. 4, Supp. Figs. S7–S8)**: Run scripts in `analysis/betweenCellType/`.
+* **Between Species & Evolutionary Divergence (Fig. 5, Supp. Fig. S9)**: Run scripts in `analysis/betweenSpecies/`.
+* **Chromatin & Sequence Determinants (Figs. 6, 7, Supp. Figs. S10–S11)**: Run integrative scripts in `analysis/betweenSpecies/` and `analysis/betweenCellType/`.
+
+---
+
+## Data & Software Availability
+
+* **STADyUM Package**: [Bioconductor release](https://bioconductor.org/packages/release/bioc/html/STADyUM.html)
+* **Processed Data & Vignettes**: [Zenodo (DOI: 10.5281/zenodo.20598895)](https://doi.org/10.5281/zenodo.20598895)
+* **Raw Sequencing Data**:
+  * Newly generated primate PRO-seq and Micro-C: NCBI GEO (GSE342014) and NIH dbGaP (phs002146).
+  * Perturbation PRO-seq & PRO-cap (DLD-1 cells): NCBI GEO (GSE144786, Aoi et al., *Mol. Cell* 2020).
+  * Histone modifications: ENCODE Consortium (see Supplementary Tables S1–S2).
+
+---
 
 ## Citation
-If you use this repository, please cite:
-Zeng X, Barshad G, Hassett R, Rice EJ, Danko CG, Siepel A, Zhao Y.
-*A comparative analysis of promoter-proximal pausing reveals kinetic and distributional dimensions of variation.* bioRxiv (2026).
-Preprint: https://www.biorxiv.org/content/10.64898/2026.06.01.729264v1
+
+If you use this codebase or the STADyUM package in your research, please cite:
+
+```bibtex
+@article{zeng2026comparative,
+  title={A comparative analysis of promoter-proximal pausing reveals kinetic and distributional dimensions of variation},
+  author={Zeng, Xin and Barshad, Gilad and Hassett, Rebecca and Rice, Edward J and Danko, Charles G and Siepel, Adam and Zhao, Yixin},
+  year={2026}
+}
+```
+
+---
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
