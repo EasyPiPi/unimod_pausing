@@ -88,7 +88,7 @@ Detailed instructions and file-level mappings for all panels (Main Figures 1–7
 * **STADyUM Package**: [Bioconductor release](https://bioconductor.org/packages/release/bioc/html/STADyUM.html)
 * **Processed Data & Vignettes**: [Zenodo (DOI: 10.5281/zenodo.20598895)](https://doi.org/10.5281/zenodo.20598895)
 * **Raw Sequencing Data**:
-  * Newly generated primate PRO-seq and Micro-C: NCBI GEO (GSE342014) and NIH dbGaP (phs002146).
+  * Newly generated primate PRO-seq and Micro-C: NCBI GEO (GSE342012,GSE342013) and NIH dbGaP (phs002146.v2).
   * Perturbation PRO-seq & PRO-cap (DLD-1 cells): NCBI GEO (GSE144786, Aoi et al., *Mol. Cell* 2020).
   * Histone modifications: ENCODE Consortium (see Supplementary Tables S1–S2).
 
